@@ -8,4 +8,4 @@ class User(models.Model):
     sex = models.CharField(max_length=10)
     password = models.CharField(max_length=100)
     department = models.CharField(max_length=100)
-    datafile = models.CharField(max_length=255, default="text")
+    

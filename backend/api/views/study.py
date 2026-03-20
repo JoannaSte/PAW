@@ -13,43 +13,45 @@ def get_studies(request):
 
     return JsonResponse(list(study), safe=False)
 
-@csrf_exempt  
-def add_user(request):
+
+@csrf_exempt
+def add_study(request):
     if request.method != "POST":
         return JsonResponse({"error": "Metoda musi być POST"}, status=405)
     
     try:
-        data = json.loads(request.body)  # odczytujemy JSON z request
+        data = json.loads(request.body)
     except json.JSONDecodeError:
         return JsonResponse({"error": "Nieprawidłowy JSON"}, status=400)
 
-    # walidacja minimalna – sprawdzamy wymagane pola
     required_fields = ["username", "surname", "age", "sex", "password", "department"]
     for field in required_fields:
-        if field not in data:
+        if field not in data or data[field] == '':
             return JsonResponse({"error": f"Brakuje pola: {field}"}, status=400)
 
-    # tworzymy użytkownika
-    user = User(
-        username=data["username"],
-        surname=data["surname"],
-        age=data["age"],
-        sex=data["sex"],
-        password=make_password(data["password"]),  # hasło hashujemy
-        department=data["department"],
-        datafile=data.get("datafile", "text")
-    )
-    user.save()
+    # Bezpieczne rzutowanie wieku
+    try:
+        age = int(data["age"])
+    except ValueError:
+        return JsonResponse({"error": "Pole age musi być liczbą"}, status=400)
+
+    try:
+        user = User(
+            username=data["username"],
+            surname=data["surname"],
+            age=age,
+            sex=data["sex"],
+            password=make_password(data["password"]),
+            department=data["department"],
+        )
+        user.save()
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({
-        "message": "Użytkownik dodany",
-        "user": {
-            "id": user.id,
-            "username": user.username,
-            "surname": user.surname,
-            "age": user.age,
-            "sex": user.sex,
-            "department": user.department,
-            "datafile": user.datafile
-        }
-    })
+        "username": user.username,
+        "surname": user.surname,
+        "age": user.age,
+        "sex": user.sex,
+        "department": user.department,
+    }, status=201)
