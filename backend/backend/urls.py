@@ -27,9 +27,10 @@ from django.urls import path
 from django.conf.urls.static import static 
 from django.conf import settings  
 from api.views.study import get_studies, add_study
-
+from api.views.login import  login_page
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("api/studies/", get_studies, name="get_studies"),  # Endpoint to retrieve all studies
     path("api/add-study/", add_study, name="get_studies"), 
+    path("api/login/", login_page, name="login_page"),
 ]

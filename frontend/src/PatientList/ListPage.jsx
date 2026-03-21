@@ -122,9 +122,11 @@
 
 import React, { useState, useEffect } from 'react';
 import API_BASE_URL from "../utils/config";
+import { useNavigate } from 'react-router-dom';
 
 const DataFilePage = () => {
   const [users, setUsers] = useState([]);
+  const navigate = useNavigate();
   const [currentPage] = useState(1); // na razie bez paginacji – możesz dodać później
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -347,6 +349,7 @@ const DataFilePage = () => {
             <th style={{ padding: '10px', border: '1px solid #ddd' }}>Wiek</th>
             <th style={{ padding: '10px', border: '1px solid #ddd' }}>Płeć</th>
             <th style={{ padding: '10px', border: '1px solid #ddd' }}>Dział</th>
+            <th style={{ padding: '10px', border: '1px solid #ddd' }}>Akcja</th>
           </tr>
         </thead>
         <tbody>
@@ -357,6 +360,14 @@ const DataFilePage = () => {
               <td style={{ padding: '10px', border: '1px solid #ddd' }}>{user.age ?? '-'}</td>
               <td style={{ padding: '10px', border: '1px solid #ddd' }}>{user.sex}</td>
               <td style={{ padding: '10px', border: '1px solid #ddd' }}>{user.department}</td>
+            
+            <td style={{padding: '10px', border: '1px solid #ddd' }}>
+              <button
+              onClick={() => navigate(`/login`, {state: {username:user.username}})}
+              >
+                Log in
+              </button>
+            </td>
             </tr>
           ))}
         </tbody>
