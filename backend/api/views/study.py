@@ -55,3 +55,9 @@ def add_study(request):
         "sex": user.sex,
         "department": user.department,
     }, status=201)
+
+
+
+@csrf_exempt
+def upload_study(request):
+    return 0

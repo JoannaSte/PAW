@@ -6,6 +6,7 @@ class User(models.Model):
     surname = models.CharField(max_length=50)
     age = models.IntegerField()
     sex = models.CharField(max_length=10)
-    password = models.CharField(max_length=100)
+    password = models.CharField(max_length=100) #sprawdz metrody securuty
     department = models.CharField(max_length=100)
     
+#gdjnagowy modul utroz
