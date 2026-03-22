@@ -24,7 +24,7 @@ def add_study(request):
     except json.JSONDecodeError:
         return JsonResponse({"error": "Nieprawidłowy JSON"}, status=400)
 
-    required_fields = ["username", "surname", "age", "sex", "password", "department"]
+    required_fields = ["nick", "firstname", "surname", "age", "sex", "password", "department"]
     for field in required_fields:
         if field not in data or data[field] == '':
             return JsonResponse({"error": f"Brakuje pola: {field}"}, status=400)
@@ -37,7 +37,8 @@ def add_study(request):
 
     try:
         user = User(
-            username=data["username"],
+            nick=data["nick"],  # Nick jest opcjonalny, domyślnie pusty
+            firstname=data["firstname"],
             surname=data["surname"],
             age=age,
             sex=data["sex"],
@@ -49,7 +50,8 @@ def add_study(request):
         return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({
-        "username": user.username,
+        "nick": user.nick,
+        "firstname": user.firstname,
         "surname": user.surname,
         "age": user.age,
         "sex": user.sex,
@@ -57,8 +59,17 @@ def add_study(request):
     }, status=201)
 
 
+@csrf_exempt
+def remove_study(request, nick):
+    if request.method != "DELETE":
+        return JsonResponse({"error": "Metoda musi być DELETE"}, status=405)
 
-
+    try:
+        user = User.objects.get(nick=nick)
+        user.delete()
+        return JsonResponse({"success": True})
+    except User.DoesNotExist:
+        return JsonResponse({"error": "Nie znaleziono użytkownika"}, status=404)
 
 @csrf_exempt
 def upload_study(request):
