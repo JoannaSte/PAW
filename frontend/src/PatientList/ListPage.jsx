@@ -1,134 +1,16 @@
-// import React, { useState, useEffect } from 'react';
-// import API_BASE_URL from "../utils/config";
-
-// const DataFilePage = () => {
-//   const [users, setUsers] = useState([]);
-//   const [currentPage, setCurrentPage] = useState(1);
-//   const itemsPerPage = 15;
-//   const indexOfLast = currentPage * itemsPerPage;
-//   const indexOfFirst = indexOfLast - itemsPerPage;
-
-//   const [showForm, setShowForm] = useState(false);
-//   const [formData, setFormData] = useState({
-//     username: '',
-//     surname: '',
-//     age: '',
-//     sex: '',
-//     password: '',
-//     department: '',
-//   });
-
-//   // Pobieranie istniejących użytkowników
-//   const fetchUsers = async () => {
-//     try {
-//       const res = await fetch(`${API_BASE_URL}/api/studies/`);
-//       const data = await res.json();
-//       setUsers(data);
-//     } catch (err) {
-//       console.error("Błąd pobierania użytkowników:", err);
-//     }
-//   };
-
-//   useEffect(() => {
-//     fetchUsers();
-//   }, []);
-
-//   // Obsługa zmian w formularzu
-//   const handleFormChange = (e) => {
-//   const value = e.target.name === "age" ? Number(e.target.value) : e.target.value;
-//   setFormData({
-//     ...formData,
-//     [e.target.name]: value,
-//   });
-// };
-//   // Wysłanie formularza
-//   const submitForm = async () => {
-//     console.log("Dane wysyłane:", formData);
-//     try {
-//       const res = await fetch(`${API_BASE_URL}/api/add-study/`, {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify(formData)
-//       });
-//       const data = await res.json();
-
-//       setUsers(prev => [...prev, data]);
-//       setShowForm(false);
-//       setFormData({
-//         username: '',
-//         surname: '',
-//         age: '',
-//         sex: '',
-//         password: '',
-//         department: '',
-//       });
-//     } catch (err) {
-//       console.error("Błąd dodawania użytkownika:", err);
-//     }
-//   };
-
-//   return (
-//     <div className="data-file-page">
-//       <h1>Lista użytkowników</h1>
-//       <button onClick={() => setShowForm(true)}>Upload Study</button>
-
-//       {showForm && (
-//         <div style={{ border: "1px solid black", padding: "10px", margin: "10px 0" }}>
-//           <input name="username" placeholder="Username" value={formData.username} onChange={handleFormChange} />
-//           <input name="surname" placeholder="Surname" value={formData.surname} onChange={handleFormChange} />
-//           <input name="age" placeholder="Age" value={formData.age} onChange={handleFormChange} type="number" />
-//           <input name="sex" placeholder="Sex" value={formData.sex} onChange={handleFormChange} />
-//           <input name="password" placeholder="Password" type="password" value={formData.password} onChange={handleFormChange} />
-//           <input name="department" placeholder="Department" value={formData.department} onChange={handleFormChange} />
-
-//           <br /><br />
-//           <button onClick={(e) => { 
-//             e.preventDefault();   // <--- blokuje domyślny submit
-//             submitForm(); 
-//           }}> 
-//             Submit
-//           </button>
-//           <button onClick={() => setShowForm(false)}>Cancel</button>
-//         </div>
-//       )}
-
-//       <table>
-//         <thead>
-//           <tr>
-//             <th>Username</th>
-//             <th>Surname</th>
-//             <th>Age</th>
-//             <th>Sex</th>
-//             <th>Department</th>
-//           </tr>
-//         </thead>
-//         <tbody>
-//           {users.slice(indexOfFirst, indexOfLast).map(user => (
-//             <tr key={user.username || `${user.username}`}>
-//               <td>{user.username}</td>
-//               <td>{user.surname}</td>
-//               <td>{user.age}</td>
-//               <td>{user.sex}</td>
-//               <td>{user.department}</td>
-//             </tr>
-//           ))}
-//         </tbody>
-//       </table>
-//     </div>
-//   );
-// };
-
-// export default DataFilePage;
-
 import React, { useState, useEffect } from 'react';
 import API_BASE_URL from "../utils/config";
+import { useNavigate } from 'react-router-dom';
+import './ListPage.css';
 
 const DataFilePage = () => {
   const [users, setUsers] = useState([]);
+  const navigate = useNavigate();
   const [currentPage] = useState(1); // na razie bez paginacji – możesz dodać później
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-    username: '',
+    nick: '',
+    firstname: '',
     surname: '',
     age: '',
     sex: '',
@@ -150,6 +32,20 @@ const DataFilePage = () => {
     }
   };
 
+  const removeUsers = async (nick) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/remove-study/${nick}/`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) throw new Error('Błąd usuwania użytkownika');
+      const data = await res.json();
+      setUsers(prev => prev.filter(user => user.nick !== nick));
+    } catch (err) {
+      console.error("Błąd pobierania:", err);
+      setErrorMessage("Nie udało się pobrać listy użytkowników");
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -164,7 +60,8 @@ const DataFilePage = () => {
   };
 
   const validateForm = () => {
-    if (!formData.username.trim()) return "Username jest wymagany";
+    if (!formData.nick.trim()) return "Nick jest wymagany";
+    if (!formData.firstname.trim()) return "Imie jest wymagane";
     if (!formData.surname.trim()) return "Nazwisko jest wymagane";
     if (!formData.sex.trim()) return "Płeć jest wymagana";
     if (!formData.department.trim()) return "Wydział / dział jest wymagany";
@@ -177,6 +74,7 @@ const DataFilePage = () => {
 
     return '';
   };
+  
 
   const submitForm = async () => {
     const validationError = validateForm();
@@ -189,7 +87,8 @@ const DataFilePage = () => {
     setErrorMessage('');
 
     const payload = {
-      username: formData.username.trim(),
+      nick: formData.nick.trim(),
+      firstname: formData.firstname.trim(),
       surname: formData.surname.trim(),
       age: formData.age.trim() === '' ? null : Number(formData.age),
       sex: formData.sex.trim(),
@@ -211,7 +110,6 @@ const DataFilePage = () => {
       const responseData = await res.json();
 
       if (!res.ok) {
-        // Serwer zwrócił 400 / 500 → pokazujemy konkretny błąd
         const serverError = responseData.error || responseData.detail || 'Błąd serwera';
         throw new Error(serverError);
       }
@@ -220,7 +118,8 @@ const DataFilePage = () => {
       setUsers((prev) => [...prev, responseData]);
       setShowForm(false);
       setFormData({
-        username: '',
+        nick: '',
+        firstname: '',
         surname: '',
         age: '',
         sex: '',
@@ -237,10 +136,11 @@ const DataFilePage = () => {
   };
 
   return (
-    <div className="data-file-page" style={{ padding: '20px' }}>
-      <h1>Lista użytkowników</h1>
+    <div className="data-file-page">
+      <h1 className = 'title'>Lista użytkowników</h1>
 
-      <button
+      <button 
+        className='primary-btn'
         onClick={() => {
           setShowForm(true);
           setErrorMessage('');
@@ -251,33 +151,36 @@ const DataFilePage = () => {
       </button>
 
       {showForm && (
-        <div
-          style={{
-            border: '1px solid #ccc',
-            padding: '20px',
-            margin: '20px 0',
-            borderRadius: '8px',
-            background: '#f9f9f9',
-            maxWidth: '500px',
-          }}
-        >
+        <div className='form-card'>
           <h3>Dodaj nowy wpis</h3>
 
           {errorMessage && (
-            <div style={{ color: 'crimson', marginBottom: '12px', fontWeight: 'bold' }}>
+            <div 
+              className='error-box'
+            >
               {errorMessage}
             </div>
           )}
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className='form'>
             <input
-              name="username"
-              placeholder="Username *"
-              value={formData.username}
+              className = 'input'
+              name="nick"
+              placeholder="Nick *"
+              value={formData.nick}
               onChange={handleFormChange}
               required
             />
             <input
+              className = 'input'
+              name="firstname"
+              placeholder="Imie *"
+              value={formData.firstname}
+              onChange={handleFormChange}
+              required
+            />
+            <input
+              className = 'input'
               name="surname"
               placeholder="Nazwisko *"
               value={formData.surname}
@@ -285,6 +188,7 @@ const DataFilePage = () => {
               required
             />
             <input
+              className = 'input'
               name="age"
               placeholder="Wiek"
               value={formData.age}
@@ -294,6 +198,7 @@ const DataFilePage = () => {
               max="120"
             />
             <input
+              className = 'input'
               name="sex"
               placeholder="Płeć (np. M / K / inne) *"
               value={formData.sex}
@@ -301,6 +206,7 @@ const DataFilePage = () => {
               required
             />
             <input
+              className = 'input'
               name="password"
               placeholder="Hasło *"
               type="password"
@@ -309,6 +215,7 @@ const DataFilePage = () => {
               required
             />
             <input
+              className = 'input'
               name="department"
               placeholder="Wydział / Dział *"
               value={formData.department}
@@ -316,21 +223,20 @@ const DataFilePage = () => {
               required
             />
 
-            <div style={{ marginTop: '16px', display: 'flex', gap: '12px' }}>
+            <div className = 'form-actions'>
               <button
                 onClick={submitForm}
                 disabled={isSubmitting}
-                style={{ minWidth: '100px' }}
               >
                 {isSubmitting ? 'Zapisywanie...' : 'Zapisz'}
               </button>
               <button
+                className = 'secondary-btn'
                 onClick={() => {
                   setShowForm(false);
                   setErrorMessage('');
                 }}
                 disabled={isSubmitting}
-                style={{ background: '#ccc' }}
               >
                 Anuluj
               </button>
@@ -339,30 +245,54 @@ const DataFilePage = () => {
         </div>
       )}
 
-      <table style={{ marginTop: '30px', width: '100%', borderCollapse: 'collapse' }}>
+      <table className='users-table'>
         <thead>
-          <tr style={{ background: '#eee' }}>
-            <th style={{ padding: '10px', border: '1px solid #ddd' }}>Username</th>
-            <th style={{ padding: '10px', border: '1px solid #ddd' }}>Nazwisko</th>
-            <th style={{ padding: '10px', border: '1px solid #ddd' }}>Wiek</th>
-            <th style={{ padding: '10px', border: '1px solid #ddd' }}>Płeć</th>
-            <th style={{ padding: '10px', border: '1px solid #ddd' }}>Dział</th>
+          <tr>
+            <th>Nick</th>
+            <th>Imie</th>
+            <th>Nazwisko</th>
+            <th>Wiek</th>
+            <th>Płeć</th>
+            <th>Dział</th>
+            <th>Akcja</th>
           </tr>
         </thead>
         <tbody>
           {users.map((user) => (
-            <tr key={user.username}>
-              <td style={{ padding: '10px', border: '1px solid #ddd' }}>{user.username}</td>
-              <td style={{ padding: '10px', border: '1px solid #ddd' }}>{user.surname}</td>
-              <td style={{ padding: '10px', border: '1px solid #ddd' }}>{user.age ?? '-'}</td>
-              <td style={{ padding: '10px', border: '1px solid #ddd' }}>{user.sex}</td>
-              <td style={{ padding: '10px', border: '1px solid #ddd' }}>{user.department}</td>
+            <tr key={user.nick}>
+              <td >{user.nick}</td>
+              <td >{user.firstname}</td>
+              <td >{user.surname}</td>
+              <td >{user.age ?? '-'}</td>
+              <td >{user.sex}</td>
+              <td >{user.department}</td>
+            
+            <td>
+              <button
+              onClick={() => navigate(`/login`, {state: {nick:user.nick}})}
+              >
+                Log in
+              </button>
+            </td>
+            <td>
+              <button
+              onClick={() => {
+                if (window.confirm("Na pewno usunąć użytkownika?")) {
+                  removeUsers(user.nick);
+                }
+              }}
+              >
+                remove
+              </button>
+            </td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      {users.length === 0 && <p style={{ marginTop: '20px' }}>Brak rekordów</p>}
+      {users.length === 0 && (
+        <p>Brak rekordów</p>
+      )}
     </div>
   );
 };
