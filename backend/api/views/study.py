@@ -1,5 +1,5 @@
 from django.views.decorators.csrf import csrf_exempt
-from api.models import User
+from api.models import User, StudyRecord, StudyUpload
 from django.http import JsonResponse
 import json
 from django.contrib.auth.hashers import make_password
@@ -73,106 +73,71 @@ def remove_study(request, nick):
 
 @csrf_exempt
 def upload_study(request, nick):
+
     if request.method != "POST":
         return JsonResponse({"error": "Metoda musi być POST"}, status=405)
 
-    if 'file' not in request.FILES:
-        return JsonResponse({"error": "Brak pliku w żądaniu"}, status=400)
-
-    uploaded_file = request.FILES['file']
-    try:
-        file_content = uploaded_file.read().decode('utf-8')
-        root = ET.fromstring(file_content)
-    except Exception as e:
-        return JsonResponse({"error": f"Błąd odczytu pliku XML: {str(e)}"}, status=400)
-
-    # Przestrzeń nazw CDA
-    ns = {'n': 'urn:hl7-org:v3'}
+    uploaded = request.FILES.get("file")
+    if not uploaded:
+        return JsonResponse({"error": "Brak pliku w polu 'file'"}, status=400)
 
     try:
-        # 1. Pobieranie danych pacjenta z XML
-        patient = root.find(".//n:patient", ns)
-        gender = "U"
-        birth_year = 2000
-
-        if patient is not None:
-            gender_elem = patient.find("n:administrativeGenderCode", ns)
-            if gender_elem is not None:
-                gender = gender_elem.attrib.get("code", "U")
-            
-            birth_elem = patient.find("n:birthTime", ns)
-            if birth_elem is not None:
-                birth_val = birth_elem.attrib.get("value", "2000")
-                birth_year = int(birth_val[:4])
-
-        # Obliczanie wieku na rok 2026 (zgodnie z Twoim założeniem)
-        age = 2026 - birth_year
-
-        # 2. Pobieranie parametrów życiowych
-        height = None
-        weight_values = []
-        heart_rates = []
-
-        for obs in root.findall(".//n:observation", ns):
-            code_elem = obs.find("n:code", ns)
-            if code_elem is None:
-                continue
-            
-            display_name = code_elem.attrib.get("displayName", "")
-            value_elem = obs.find("n:value", ns)
-            
-            if value_elem is None or "value" not in value_elem.attrib:
-                continue
-            
-            try:
-                val = float(value_elem.attrib.get("value"))
-                if "Height" in display_name:
-                    height = int(val)
-                elif "Body weight" in display_name:
-                    weight_values.append(val)
-                elif "Heart rate" in display_name:
-                    heart_rates.append(val)
-            except ValueError:
-                continue
-
-        # Obliczanie średnich
-        avg_weight = round(sum(weight_values) / len(weight_values), 1) if weight_values else None
-        avg_hr = round(sum(heart_rates) / len(heart_rates), 1) if heart_rates else None
-
-        # 3. Zapis do bazy danych (z przypisaniem nicku do Imienia i Nazwiska)
-        # filter().first() zapobiega błędowi "MultipleObjectsReturned"
-        user = User.objects.filter(nick=nick).first()
-
-        if user:
-            # Aktualizacja istniejącego użytkownika
-            user.firstname = nick  # Imię = nick
-            user.surname = nick    # Nazwisko = nick
-            user.age = age
-            user.sex = gender
-            user.save()
-        else:
-            # Tworzenie nowego użytkownika
-            user = User.objects.create(
-                nick=nick,
-                firstname=nick,    # Imię = nick
-                surname=nick,      # Nazwisko = nick
-                age=age,
-                sex=gender,
-                password=make_password("tajne"),
-                department="HealthData",
-            )
-
-        # 4. Zwrot odpowiedzi JSON
-        return JsonResponse({
-            "nick": user.nick,
-            "firstname": user.firstname,
-            "surname": user.surname,
-            "age": user.age,
-            "sex": user.sex,
-            "height": height,
-            "avg_weight": avg_weight,
-            "avg_heart_rate": avg_hr
-        }, status=201)
-
+        raw = uploaded.read()
+        text = raw.decode("utf-8-sig")
+        payload = json.loads(text)
+    except UnicodeDecodeError:
+        return JsonResponse({"error": "Nie udało się odczytać pliku jako UTF-8"}, status=400)
+    except json.JSONDecodeError as e:
+        return JsonResponse({"error": f"Nieprawidłowy JSON: {e.msg}"}, status=400)
     except Exception as e:
-        return JsonResponse({"error": f"Błąd przetwarzania: {str(e)}"}, status=400)
+        return JsonResponse({"error": str(e)}, status=500)
+
+    print(f"[upload_study] nick={nick} filename={uploaded.name} size={uploaded.size}")
+    print("[upload_study] JSON payload:")
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+
+    saved = StudyUpload.objects.create(
+        nick=nick,
+        filename=uploaded.name,
+        data=payload,
+    )
+
+    required_keys = [
+        "id",
+        "latitude",
+        "longitude",
+        "value",
+        "score",
+        "activity_status",
+        "flag",
+    ]
+    missing = [k for k in required_keys if k not in payload]
+    if missing:
+        return JsonResponse({"error": f"Brakuje pól w JSON: {', '.join(missing)}"}, status=400)
+
+    user = User.objects.filter(nick=nick).first()
+
+    record = StudyRecord.objects.create(
+        user=user,
+        upload=saved,
+        external_id=int(payload["id"]),
+        latitude=float(payload["latitude"]),
+        longitude=float(payload["longitude"]),
+        value=float(payload["value"]),
+        score=float(payload["score"]),
+        activity_status=str(payload["activity_status"]),
+        flag=int(payload["flag"]),
+    )
+
+    return JsonResponse(
+        {
+            "success": True,
+            "id": saved.id,
+            "record_id": record.id,
+            "nick": nick,
+            "filename": uploaded.name,
+            "data": payload,
+        },
+        safe=True,
+        status=200,
+    )

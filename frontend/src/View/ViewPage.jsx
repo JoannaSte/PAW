@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 import API_BASE_URL from "../utils/config";
 import './ViewPage.css'; // możesz dodać własne style
 
 const ViewPage = () => {
+  const { nick } = useParams();
   const [userData, setUserData] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
@@ -15,7 +17,11 @@ const ViewPage = () => {
   };
 
   // Upload pliku do backendu
-  const handleUpload = async (nick) => {
+  const handleUpload = async (nickValue) => {
+    if (!nickValue?.trim()) {
+      setErrorMessage("Brak nick w adresie URL");
+      return;
+    }
     if (!selectedFile) {
       setErrorMessage("Wybierz plik do przesłania");
       return;
@@ -28,7 +34,7 @@ const ViewPage = () => {
     setErrorMessage('');
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/upload-study/${nick}/`, {
+      const res = await fetch(`${API_BASE_URL}/api/upload-study/${encodeURIComponent(nickValue.trim())}/`, {
         method: 'POST',
         body: formData,
       });
@@ -57,9 +63,9 @@ const ViewPage = () => {
       <input
         type="file"
         onChange={handleFileChange}
-        accept=".csv,.xlsx,.txt" // opcjonalnie ograniczamy typy
+        accept=".json"
       />
-      <button onClick={handleUpload} disabled={isUploading}>
+      <button onClick={() => handleUpload(nick)} disabled={isUploading}>
         {isUploading ? 'Wysyłanie...' : 'Załaduj dane'}
       </button>
 
