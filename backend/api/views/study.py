@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.views.decorators.csrf import csrf_exempt
 from api.models import User, StudyRecord, StudyUpload
 from django.http import JsonResponse
@@ -102,41 +104,80 @@ def upload_study(request, nick):
         data=payload,
     )
 
+    if not isinstance(payload, list):
+        return JsonResponse(
+            {"error": "Oczekiwana jest tablica rekordów (np. [ {...}, {...} ])"},
+            status=400,
+        )
+
     required_keys = [
-        "id",
-        "latitude",
-        "longitude",
-        "value",
-        "score",
-        "activity_status",
-        "flag",
+        "date",
+        "user_id",
+        "sleep_hours",
+        "sleep_start_hour",
+        "sleep_quality_score",
+        "activity_level",
+        "stress_level",
+        "hourly_activity_vector",
+        "hourly_heart_rate_vector",
+        "hourly_steps_vector",
     ]
-    missing = [k for k in required_keys if k not in payload]
-    if missing:
-        return JsonResponse({"error": f"Brakuje pól w JSON: {', '.join(missing)}"}, status=400)
 
     user = User.objects.filter(nick=nick).first()
+    record_ids = []
 
-    record = StudyRecord.objects.create(
-        user=user,
-        upload=saved,
-        external_id=int(payload["id"]),
-        latitude=float(payload["latitude"]),
-        longitude=float(payload["longitude"]),
-        value=float(payload["value"]),
-        score=float(payload["score"]),
-        activity_status=str(payload["activity_status"]),
-        flag=int(payload["flag"]),
-    )
+    for idx, item in enumerate(payload):
+        if not isinstance(item, dict):
+            return JsonResponse(
+                {"error": f"Element #{idx} musi być obiektem JSON"},
+                status=400,
+            )
+        missing = [k for k in required_keys if k not in item]
+        if missing:
+            return JsonResponse(
+                {"error": f"Rekord #{idx}: brakuje pól: {', '.join(missing)}"},
+                status=400,
+            )
+
+        try:
+            record_date = datetime.strptime(str(item["date"]), "%Y-%m-%d").date()
+        except ValueError:
+            return JsonResponse(
+                {"error": f"Rekord #{idx}: pole 'date' musi być w formacie YYYY-MM-DD"},
+                status=400,
+            )
+
+        try:
+            rec = StudyRecord.objects.create(
+                user=user,
+                upload=saved,
+                record_date=record_date,
+                external_user_id=str(item["user_id"]),
+                sleep_hours=float(item["sleep_hours"]),
+                sleep_start_hour=int(item["sleep_start_hour"]),
+                sleep_quality_score=int(item["sleep_quality_score"]),
+                activity_level=str(item["activity_level"]),
+                stress_level=str(item["stress_level"]),
+                hourly_activity_vector=list(item["hourly_activity_vector"]),
+                hourly_heart_rate_vector=list(item["hourly_heart_rate_vector"]),
+                hourly_steps_vector=list(item["hourly_steps_vector"]),
+            )
+        except (TypeError, ValueError) as e:
+            return JsonResponse(
+                {"error": f"Rekord #{idx}: nieprawidłowe typy wartości — {e}"},
+                status=400,
+            )
+
+        record_ids.append(rec.id)
 
     return JsonResponse(
         {
             "success": True,
             "id": saved.id,
-            "record_id": record.id,
+            "records_count": len(record_ids),
+            "record_ids": record_ids,
             "nick": nick,
             "filename": uploaded.name,
-            "data": payload,
         },
         safe=True,
         status=200,

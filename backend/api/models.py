@@ -32,26 +32,32 @@ class StudyUpload(models.Model):
 
 
 class StudyRecord(models.Model):
+    """Jeden wiersz = jeden dzień z pliku JSON (format dane.json na pulpicie)."""
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     upload = models.ForeignKey(StudyUpload, on_delete=models.CASCADE, related_name="records")
 
-    external_id = models.IntegerField()
-    latitude = models.FloatField()
-    longitude = models.FloatField()
-    value = models.FloatField()
-    score = models.FloatField()
-    activity_status = models.CharField(max_length=64)
-    flag = models.IntegerField()
+    record_date = models.DateField()
+    external_user_id = models.CharField(max_length=32)
+    sleep_hours = models.FloatField()
+    sleep_start_hour = models.IntegerField()
+    sleep_quality_score = models.IntegerField()
+    activity_level = models.CharField(max_length=64)
+    stress_level = models.CharField(max_length=16)
+    hourly_activity_vector = models.JSONField()
+    hourly_heart_rate_vector = models.JSONField()
+    hourly_steps_vector = models.JSONField()
 
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         indexes = [
-            models.Index(fields=["external_id"]),
-            models.Index(fields=["created_at"]),
+            models.Index(
+                fields=["external_user_id", "record_date"],
+                name="api_studyre_externa_1a3ccc_idx",
+            ),
         ]
 
     def __str__(self) -> str:
-        return f"StudyRecord(external_id={self.external_id}, upload_id={self.upload_id})"
+        return f"StudyRecord({self.external_user_id} @ {self.record_date})"
 
 #gdjnagowy modul utroz
