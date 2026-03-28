@@ -1,5 +1,7 @@
+from datetime import datetime
+
 from django.views.decorators.csrf import csrf_exempt
-from api.models import User
+from api.models import User, StudyRecord, StudyUpload
 from django.http import JsonResponse
 import json
 from django.contrib.auth.hashers import make_password
@@ -73,106 +75,110 @@ def remove_study(request, nick):
 
 @csrf_exempt
 def upload_study(request, nick):
+
     if request.method != "POST":
         return JsonResponse({"error": "Metoda musi być POST"}, status=405)
 
-    if 'file' not in request.FILES:
-        return JsonResponse({"error": "Brak pliku w żądaniu"}, status=400)
+    uploaded = request.FILES.get("file")
+    if not uploaded:
+        return JsonResponse({"error": "Brak pliku w polu 'file'"}, status=400)
 
-    uploaded_file = request.FILES['file']
     try:
-        file_content = uploaded_file.read().decode('utf-8')
-        root = ET.fromstring(file_content)
+        raw = uploaded.read()
+        text = raw.decode("utf-8-sig")
+        payload = json.loads(text)
+    except UnicodeDecodeError:
+        return JsonResponse({"error": "Nie udało się odczytać pliku jako UTF-8"}, status=400)
+    except json.JSONDecodeError as e:
+        return JsonResponse({"error": f"Nieprawidłowy JSON: {e.msg}"}, status=400)
     except Exception as e:
-        return JsonResponse({"error": f"Błąd odczytu pliku XML: {str(e)}"}, status=400)
+        return JsonResponse({"error": str(e)}, status=500)
 
-    # Przestrzeń nazw CDA
-    ns = {'n': 'urn:hl7-org:v3'}
+    print(f"[upload_study] nick={nick} filename={uploaded.name} size={uploaded.size}")
+    print("[upload_study] JSON payload:")
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
 
-    try:
-        # 1. Pobieranie danych pacjenta z XML
-        patient = root.find(".//n:patient", ns)
-        gender = "U"
-        birth_year = 2000
+    saved = StudyUpload.objects.create(
+        nick=nick,
+        filename=uploaded.name,
+        data=payload,
+    )
 
-        if patient is not None:
-            gender_elem = patient.find("n:administrativeGenderCode", ns)
-            if gender_elem is not None:
-                gender = gender_elem.attrib.get("code", "U")
-            
-            birth_elem = patient.find("n:birthTime", ns)
-            if birth_elem is not None:
-                birth_val = birth_elem.attrib.get("value", "2000")
-                birth_year = int(birth_val[:4])
+    if not isinstance(payload, list):
+        return JsonResponse(
+            {"error": "Oczekiwana jest tablica rekordów (np. [ {...}, {...} ])"},
+            status=400,
+        )
 
-        # Obliczanie wieku na rok 2026 (zgodnie z Twoim założeniem)
-        age = 2026 - birth_year
+    required_keys = [
+        "date",
+        "user_id",
+        "sleep_hours",
+        "sleep_start_hour",
+        "sleep_quality_score",
+        "activity_level",
+        "stress_level",
+        "hourly_activity_vector",
+        "hourly_heart_rate_vector",
+        "hourly_steps_vector",
+    ]
 
-        # 2. Pobieranie parametrów życiowych
-        height = None
-        weight_values = []
-        heart_rates = []
+    user = User.objects.filter(nick=nick).first()
+    record_ids = []
 
-        for obs in root.findall(".//n:observation", ns):
-            code_elem = obs.find("n:code", ns)
-            if code_elem is None:
-                continue
-            
-            display_name = code_elem.attrib.get("displayName", "")
-            value_elem = obs.find("n:value", ns)
-            
-            if value_elem is None or "value" not in value_elem.attrib:
-                continue
-            
-            try:
-                val = float(value_elem.attrib.get("value"))
-                if "Height" in display_name:
-                    height = int(val)
-                elif "Body weight" in display_name:
-                    weight_values.append(val)
-                elif "Heart rate" in display_name:
-                    heart_rates.append(val)
-            except ValueError:
-                continue
-
-        # Obliczanie średnich
-        avg_weight = round(sum(weight_values) / len(weight_values), 1) if weight_values else None
-        avg_hr = round(sum(heart_rates) / len(heart_rates), 1) if heart_rates else None
-
-        # 3. Zapis do bazy danych (z przypisaniem nicku do Imienia i Nazwiska)
-        # filter().first() zapobiega błędowi "MultipleObjectsReturned"
-        user = User.objects.filter(nick=nick).first()
-
-        if user:
-            # Aktualizacja istniejącego użytkownika
-            user.firstname = nick  # Imię = nick
-            user.surname = nick    # Nazwisko = nick
-            user.age = age
-            user.sex = gender
-            user.save()
-        else:
-            # Tworzenie nowego użytkownika
-            user = User.objects.create(
-                nick=nick,
-                firstname=nick,    # Imię = nick
-                surname=nick,      # Nazwisko = nick
-                age=age,
-                sex=gender,
-                password=make_password("tajne"),
-                department="HealthData",
+    for idx, item in enumerate(payload):
+        if not isinstance(item, dict):
+            return JsonResponse(
+                {"error": f"Element #{idx} musi być obiektem JSON"},
+                status=400,
+            )
+        missing = [k for k in required_keys if k not in item]
+        if missing:
+            return JsonResponse(
+                {"error": f"Rekord #{idx}: brakuje pól: {', '.join(missing)}"},
+                status=400,
             )
 
-        # 4. Zwrot odpowiedzi JSON
-        return JsonResponse({
-            "nick": user.nick,
-            "firstname": user.firstname,
-            "surname": user.surname,
-            "age": user.age,
-            "sex": user.sex,
-            "height": height,
-            "avg_weight": avg_weight,
-            "avg_heart_rate": avg_hr
-        }, status=201)
+        try:
+            record_date = datetime.strptime(str(item["date"]), "%Y-%m-%d").date()
+        except ValueError:
+            return JsonResponse(
+                {"error": f"Rekord #{idx}: pole 'date' musi być w formacie YYYY-MM-DD"},
+                status=400,
+            )
 
-    except Exception as e:
-        return JsonResponse({"error": f"Błąd przetwarzania: {str(e)}"}, status=400)
+        try:
+            rec = StudyRecord.objects.create(
+                user=user,
+                upload=saved,
+                record_date=record_date,
+                external_user_id=str(item["user_id"]),
+                sleep_hours=float(item["sleep_hours"]),
+                sleep_start_hour=int(item["sleep_start_hour"]),
+                sleep_quality_score=int(item["sleep_quality_score"]),
+                activity_level=str(item["activity_level"]),
+                stress_level=str(item["stress_level"]),
+                hourly_activity_vector=list(item["hourly_activity_vector"]),
+                hourly_heart_rate_vector=list(item["hourly_heart_rate_vector"]),
+                hourly_steps_vector=list(item["hourly_steps_vector"]),
+            )
+        except (TypeError, ValueError) as e:
+            return JsonResponse(
+                {"error": f"Rekord #{idx}: nieprawidłowe typy wartości — {e}"},
+                status=400,
+            )
+
+        record_ids.append(rec.id)
+
+    return JsonResponse(
+        {
+            "success": True,
+            "id": saved.id,
+            "records_count": len(record_ids),
+            "record_ids": record_ids,
+            "nick": nick,
+            "filename": uploaded.name,
+        },
+        safe=True,
+        status=200,
+    )
