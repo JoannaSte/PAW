@@ -182,3 +182,36 @@ def upload_study(request, nick):
         safe=True,
         status=200,
     )
+
+
+
+def get_user_records(request, nick):
+    if request.method != "GET":
+        return JsonResponse({"error": "Tylko GET"}, status=405)
+
+    user = User.objects.filter(nick=nick).first()
+
+    if user:
+        records = StudyRecord.objects.filter(user=user)
+    else:
+        # fallback jeśli user=None przy zapisie
+        records = StudyRecord.objects.filter(upload__nick=nick)
+
+    data = list(records.values(
+        "id",
+        "record_date",
+        "external_user_id",
+        "sleep_hours",
+        "sleep_start_hour",
+        "sleep_quality_score",
+        "activity_level",
+        "stress_level",
+        "hourly_activity_vector",
+        "hourly_heart_rate_vector",
+        "hourly_steps_vector",
+        "created_at",
+        "upload_id",
+        "user_id",
+    ))
+
+    return JsonResponse(data, safe=False)
