@@ -374,14 +374,27 @@ const ViewPage = () => {
   };
 
   const chartData = Array.isArray(userData)
-    ? userData.map(r => ({
+  ? userData.map((r, index) => {
+      const sleep = Number(r.sleep ?? r.sleep_hours);
+      const stress = Number(r.stress ?? r.stress_level);
+      const quality = Number(r.quality ?? r.sleep_quality_score);
+      const activity = activityMap[r.activity_level] || 0;
+
+      return {
+        x: index,
         date: r.date || r.record_date || "brak daty",
-        sleep: Number(r.sleep) || Number(r.sleep_hours) || 0,
-        stress: Number(r.stress) || Number(r.stress_level) || 0,
-        quality: Number(r.quality) || Number(r.sleep_quality_score) || 0,
-        activity: activityMap[r.activity_level] || 0,
-      }))
-    : [];
+        sleep: isNaN(sleep) ? null : sleep,
+        stress: isNaN(stress) ? null : stress,
+        quality: isNaN(quality) ? null : quality,
+        activity: isNaN(activity) ? null : activity,
+      };
+    })
+  : [];
+
+
+  const dateMap = Object.fromEntries(
+    chartData.map(d => [d.x, d.date])
+  );
 
   const stepsData = Array.isArray(userData)
   ? userData.flatMap((r, dayIndex) =>
@@ -465,7 +478,10 @@ const ViewPage = () => {
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
+                    <XAxis
+                      dataKey="x"
+                      tickFormatter={(value) => dateMap[value]?.slice(0, 10) || value}
+                    />
                     <YAxis />
                     <Tooltip />
                     <Line type="monotone" dataKey="sleep" />
@@ -478,7 +494,10 @@ const ViewPage = () => {
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
+                    <XAxis
+                      dataKey="x"
+                      tickFormatter={(value) => dateMap[value]?.slice(0, 10) || value}
+                    />
                     <YAxis />
                     <Tooltip />
                     <Line type="monotone" dataKey="quality" />
@@ -491,7 +510,10 @@ const ViewPage = () => {
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
+                    <XAxis
+                      dataKey="x"
+                      tickFormatter={(value) => dateMap[value]?.slice(0, 10) || value}
+                    />
                     <YAxis />
                     <Tooltip />
                     <Line type="monotone" dataKey="stress" />
@@ -504,7 +526,10 @@ const ViewPage = () => {
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
+                    <XAxis
+                      dataKey="x"
+                      tickFormatter={(value) => dateMap[value]?.slice(0, 10) || value}
+                    />
                     <YAxis />
                     <Tooltip />
                     <Line type="monotone" dataKey="activity" />
@@ -517,7 +542,10 @@ const ViewPage = () => {
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
+                    <XAxis
+                      dataKey="x"
+                      tickFormatter={(value) => dateMap[value]?.slice(0, 10) || value}
+                    />
                     <YAxis />
                     <Tooltip />
                     <Line type="monotone" dataKey="sleep" />
