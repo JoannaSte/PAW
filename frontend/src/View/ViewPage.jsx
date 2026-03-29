@@ -384,14 +384,14 @@ const ViewPage = () => {
     : [];
 
   const stepsData = Array.isArray(userData)
-    ? userData.flatMap((r, dayIndex) =>
-        (r.hourly_steps_vector || []).map((val, i) => ({
-          x: dayIndex * 24 + i,
-          steps: Number(val) || 0,
-          date: r.date || r.record_date || null,
-        }))
-      )
-    : [];
+  ? userData.flatMap((r, dayIndex) =>
+      (r.hourly_steps_vector || []).map((val, i) => ({
+        x: dayIndex * 24 + i,
+        steps: Number(val) || 0,
+        date: r.date || r.record_date,
+      }))
+    )
+  : [];
 
   const avg = (key) =>
     chartData.length
@@ -531,7 +531,13 @@ const ViewPage = () => {
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={stepsData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="x" />
+                    <XAxis
+                      dataKey="x"
+                      tickFormatter={(value) => {
+                        const point = stepsData.find(d => d.x === value);
+                        return point?.date ? point.date.slice(0, 10) : value;
+                      }}
+                    />
                     <YAxis />
                     <Tooltip />
                     <Line type="monotone" dataKey="steps" />
