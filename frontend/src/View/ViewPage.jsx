@@ -261,7 +261,7 @@
 // export default ViewPage;
 
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import API_BASE_URL from "../utils/config";
 import './ViewPage.css';
@@ -373,23 +373,25 @@ const ViewPage = () => {
     "Highly Active": 3,
   };
 
-  const chartData = Array.isArray(userData)
-  ? userData.map((r, index) => {
-      const sleep = Number(r.sleep ?? r.sleep_hours);
-      const stress = Number(r.stress ?? r.stress_level);
-      const quality = Number(r.quality ?? r.sleep_quality_score);
-      const activity = activityMap[r.activity_level] || 0;
+  const chartData = useMemo(() => (
+    Array.isArray(userData)
+      ? userData.map((r, index) => {
+          const sleep = Number(r.sleep ?? r.sleep_hours);
+          const stress = Number(r.stress ?? r.stress_level);
+          const quality = Number(r.quality ?? r.sleep_quality_score);
+          const activity = activityMap[r.activity_level] || 0;
 
-      return {
-        x: index,
-        date: r.date || r.record_date || "brak daty",
-        sleep: isNaN(sleep) ? null : sleep,
-        stress: isNaN(stress) ? null : stress,
-        quality: isNaN(quality) ? null : quality,
-        activity: isNaN(activity) ? null : activity,
-      };
-    })
-  : [];
+          return {
+            x: index,
+            date: r.date || r.record_date || "brak daty",
+            sleep: isNaN(sleep) ? null : sleep,
+            stress: isNaN(stress) ? null : stress,
+            quality: isNaN(quality) ? null : quality,
+            activity: isNaN(activity) ? null : activity,
+          };
+        })
+      : []
+  ), [userData]);
 
 
   const dateMap = Object.fromEntries(

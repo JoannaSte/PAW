@@ -14,6 +14,7 @@ class User(models.Model):
     sex = models.CharField(max_length=10)
     password = models.CharField(max_length=100) #sprawdz metrody securuty
     department = models.CharField(max_length=100)
+    image = models.ImageField(upload_to='avatars/', null=True, blank=True)
 
     def set_password(self, raw_password):
         self.password = make_password(raw_password)

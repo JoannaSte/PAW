@@ -38,4 +38,4 @@ urlpatterns = [
     path("api/remove-study/<str:nick>/", remove_study, name="remove_study"),
     path("api/upload-study/<str:nick>/", upload_study, name="upload_study"),
     path("api/get-user-records/<str:nick>/", get_user_records, name="get_user_records"),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

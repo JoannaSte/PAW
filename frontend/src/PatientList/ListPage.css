@@ -8,38 +8,101 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
+  overflow-y: auto; /* 🔥 ważne */
 }
 
-/* animacja tła */
+/* TOP BAR */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 100%;
+  max-width: 950px;
+  margin: 0 auto 20px auto;
+  gap: 10px;
+}
+
+/* LEWA STRONA */
+.left-controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* PRAWA STRONA */
+.right-controls {
+  display: flex;
+  align-items: flex-end;
+}
+
+/* INPUT + SELECT */
+.input {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  background: rgba(255,255,255,0.2);
+  color: white;
+  backdrop-filter: blur(10px);
+}
+
+/* placeholder */
+.input::placeholder {
+  color: rgba(255,255,255,0.7);
+}
+
+/* select */
+select.input {
+  color: white;
+}
+
+/* opcje */
+select.input option {
+  color: black;
+  background: white;
+}
+
+/* AVATAR */
+.avatar {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.6);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* ANIMACJA TŁA */
 @keyframes bgMove {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
 
-/* === TITLE === */
+/* TITLE */
 .title {
-  font-size: 36px;
+  font-size: 50px;
   font-weight: 800;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   text-align: center;
   background: linear-gradient(90deg, #fff, #a5b4fc, #f9a8d4);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  letter-spacing: -1px;
 }
 
-/* === BUTTONS === */
+/* BUTTON */
 .primary-btn {
   background: linear-gradient(135deg, #ff7a18, #ff3d77);
   color: white;
   border: none;
-  padding: 12px 22px;
+  padding: 8px 40px;
   border-radius: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: 0.3s;
+  margin-top: 10px;
 }
 
 .primary-btn:hover {
@@ -47,6 +110,7 @@
   box-shadow: 0 10px 25px rgba(255, 61, 119, 0.5);
 }
 
+/* SECONDARY BUTTON */
 .secondary-btn {
   background: linear-gradient(135deg, #38bdf8, #6366f1);
   color: white;
@@ -62,7 +126,7 @@
   box-shadow: 0 10px 20px rgba(56,189,248,0.4);
 }
 
-/* === FORM CARD === */
+/* FORM CARD */
 .form-card {
   margin-top: 20px;
   background: rgba(255, 255, 255, 0.15);
@@ -75,7 +139,7 @@
   color: white;
 }
 
-/* === ERROR === */
+/* ERROR */
 .error-box {
   background: rgba(255, 0, 0, 0.2);
   color: #fff;
@@ -85,33 +149,19 @@
   border-left: 4px solid #ff4d4f;
 }
 
-/* === FORM === */
+/* FORM */
 .form {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-/* === INPUT === */
-.input {
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: none;
-  outline: none;
-  font-size: 14px;
-  background: rgba(255,255,255,0.2);
-  color: white;
-}
-
-.input::placeholder {
-  color: rgba(255,255,255,0.7);
-}
-
+/* INPUT */
 .input:focus {
   box-shadow: 0 0 0 2px #fff;
 }
 
-/* === FORM ACTIONS === */
+/* FORM ACTIONS */
 .form-actions {
   display: flex;
   justify-content: flex-end;
@@ -119,16 +169,24 @@
   margin-top: 10px;
 }
 
-/* === TABLE === */
-.users-table {
+/* TABLE WRAPPER */
+.table-wrapper {
+  margin-top: -30px;
   width: 100%;
   max-width: 950px;
-  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+}
+
+/* TABLE */
+.users-table {
+  margin-top: 10px;
+  width: 100%;
   border-collapse: collapse;
   border-radius: 20px;
   overflow: hidden;
-  backdrop-filter: blur(10px);
   background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
   box-shadow: 0 20px 40px rgba(0,0,0,0.3);
 }
 
@@ -152,17 +210,16 @@
   border-top: 1px solid rgba(255,255,255,0.1);
 }
 
-/* zebra rows */
+/* ROWS */
 .users-table tr:nth-child(even) {
   background: rgba(255,255,255,0.05);
 }
 
-/* hover */
 .users-table tr:hover {
   background: rgba(255,255,255,0.15);
 }
 
-/* === LOGIN BUTTON === */
+/* BUTTON IN TABLE */
 .users-table button {
   background: linear-gradient(135deg, #22c55e, #4ade80);
   color: white;
@@ -178,9 +235,8 @@
   box-shadow: 0 8px 20px rgba(34,197,94,0.5);
 }
 
-/* === EMPTY STATE === */
+/* EMPTY */
 .data-file-page p {
   margin-top: 25px;
   color: white;
-  font-size: 15px;
 }

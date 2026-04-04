@@ -16,49 +16,82 @@ def get_studies(request):
     return JsonResponse(list(study), safe=False)
 
 
+# @csrf_exempt
+# def add_study(request):
+#     if request.method != "POST":
+#         return JsonResponse({"error": "Metoda musi być POST"}, status=405)
+    
+#     try:
+#         data = json.loads(request.body)
+#     except json.JSONDecodeError:
+#         return JsonResponse({"error": "Nieprawidłowy JSON"}, status=400)
+
+#     required_fields = ["nick", "firstname", "surname", "age", "sex", "password", "department"]
+#     for field in required_fields:
+#         if field not in data or data[field] == '':
+#             return JsonResponse({"error": f"Brakuje pola: {field}"}, status=400)
+
+#     # Bezpieczne rzutowanie wieku
+#     try:
+#         age = int(data["age"])
+#     except ValueError:
+#         return JsonResponse({"error": "Pole age musi być liczbą"}, status=400)
+
+#     try:
+#         user = User(
+#             nick=data["nick"],  # Nick jest opcjonalny, domyślnie pusty
+#             firstname=data["firstname"],
+#             surname=data["surname"],
+#             age=age,
+#             sex=data["sex"],
+#             password=make_password(data["password"]),
+#             department=data["department"],
+#         )
+#         user.save()
+#     except Exception as e:
+#         return JsonResponse({"error": str(e)}, status=500)
+
+#     return JsonResponse({
+#         "nick": user.nick,
+#         "firstname": user.firstname,
+#         "surname": user.surname,
+#         "age": user.age,
+#         "sex": user.sex,
+#         "department": user.department,
+#     }, status=201)
+
 @csrf_exempt
 def add_study(request):
-    if request.method != "POST":
-        return JsonResponse({"error": "Metoda musi być POST"}, status=405)
-    
-    try:
-        data = json.loads(request.body)
-    except json.JSONDecodeError:
-        return JsonResponse({"error": "Nieprawidłowy JSON"}, status=400)
+    if request.method == 'POST':
+        data = request.POST
+        image = request.FILES.get('image')
 
-    required_fields = ["nick", "firstname", "surname", "age", "sex", "password", "department"]
-    for field in required_fields:
-        if field not in data or data[field] == '':
-            return JsonResponse({"error": f"Brakuje pola: {field}"}, status=400)
-
-    # Bezpieczne rzutowanie wieku
-    try:
-        age = int(data["age"])
-    except ValueError:
-        return JsonResponse({"error": "Pole age musi być liczbą"}, status=400)
-
-    try:
         user = User(
-            nick=data["nick"],  # Nick jest opcjonalny, domyślnie pusty
-            firstname=data["firstname"],
-            surname=data["surname"],
-            age=age,
-            sex=data["sex"],
-            password=make_password(data["password"]),
-            department=data["department"],
+            nick=data.get('nick'),
+            firstname=data.get('firstname'),
+            surname=data.get('surname'),
+            age=data.get('age') or None,
+            sex=data.get('sex'),
+            department=data.get('department'),
         )
-        user.save()
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
 
-    return JsonResponse({
-        "nick": user.nick,
-        "firstname": user.firstname,
-        "surname": user.surname,
-        "age": user.age,
-        "sex": user.sex,
-        "department": user.department,
-    }, status=201)
+        if image:
+            user.image = image
+
+        print('jak wyglada imeg')
+        print(user.image)
+        user.set_password(data.get('password'))
+        user.save()
+
+        return JsonResponse({
+            "nick": user.nick,
+            "firstname": user.firstname,
+            "surname": user.surname,
+            "age": user.age,
+            "sex": user.sex,
+            "department": user.department,
+            "image": user.image.url if user.image else None
+        })
 
 
 @csrf_exempt

@@ -4,6 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import './ListPage.css';
 
 const DataFilePage = () => {
+  const [imageFile, setImageFile] = useState(null);
+  const [sortField, setSortField] = useState('nick');
+  const [sortOrder, setSortOrder] = useState('asc'); // asc / desc
+  const [search, setSearch] = useState('');
   const [users, setUsers] = useState([]);
   const navigate = useNavigate();
   const [currentPage] = useState(1); // na razie bez paginacji – możesz dodać później
@@ -27,6 +31,7 @@ const DataFilePage = () => {
       const data = await res.json();
       setUsers(data);
     } catch (err) {
+      
       console.error("Błąd pobierania:", err);
       setErrorMessage("Nie udało się pobrać listy użytkowników");
     }
@@ -76,80 +81,201 @@ const DataFilePage = () => {
   };
   
 
+  // const submitForm = async () => {
+  //   const validationError = validateForm();
+  //   if (validationError) {
+  //     setErrorMessage(validationError);
+  //     return;
+  //   }
+
+  //   setIsSubmitting(true);
+  //   setErrorMessage('');
+
+  //   const payload = {
+  //     nick: formData.nick.trim(),
+  //     firstname: formData.firstname.trim(),
+  //     surname: formData.surname.trim(),
+  //     age: formData.age.trim() === '' ? null : Number(formData.age),
+  //     sex: formData.sex.trim(),
+  //     password: formData.password,
+  //     department: formData.department.trim(),
+  //   };
+
+  //   console.log("Wysyłane dane:", payload);
+
+  //   try {
+  //     const res = await fetch(`${API_BASE_URL}/api/add-study/`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify(payload),
+  //     });
+
+  //     const responseData = await res.json();
+
+  //     if (!res.ok) {
+  //       const serverError = responseData.error || responseData.detail || 'Błąd serwera';
+  //       throw new Error(serverError);
+  //     }
+
+  //     // Sukces
+  //     setUsers((prev) => [...prev, responseData]);
+  //     setShowForm(false);
+  //     setFormData({
+  //       nick: '',
+  //       firstname: '',
+  //       surname: '',
+  //       age: '',
+  //       sex: '',
+  //       password: '',
+  //       department: '',
+  //     });
+  //     setErrorMessage('');
+  //   } catch (err) {
+  //     console.error("Błąd:", err);
+  //     setErrorMessage(err.message || "Coś poszło nie tak – sprawdź konsolę");
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
   const submitForm = async () => {
     const validationError = validateForm();
     if (validationError) {
-      setErrorMessage(validationError);
+      setErrorMessage(validateForm);
       return;
     }
 
     setIsSubmitting(true);
     setErrorMessage('');
 
-    const payload = {
-      nick: formData.nick.trim(),
-      firstname: formData.firstname.trim(),
-      surname: formData.surname.trim(),
-      age: formData.age.trim() === '' ? null : Number(formData.age),
-      sex: formData.sex.trim(),
-      password: formData.password,
-      department: formData.department.trim(),
-    };
+    const formDataToSend = new FormData();
 
-    console.log("Wysyłane dane:", payload);
+    formDataToSend.append('nick', formData.nick)
+    formDataToSend.append('firstname', formData.firstname)
+    formDataToSend.append('surname', formData.surname)
+    formDataToSend.append('age', formData.age)
+    formDataToSend.append('sex', formData.sex)
+    formDataToSend.append('password', formData.password)
+    formDataToSend.append('department', formData.department)
 
+    if (imageFile) {
+      formDataToSend.append('image', imageFile);
+      console.log(imageFile)
+    }
     try {
       const res = await fetch(`${API_BASE_URL}/api/add-study/`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+        body: formDataToSend,
       });
 
-      const responseData = await res.json();
-
-      if (!res.ok) {
-        const serverError = responseData.error || responseData.detail || 'Błąd serwera';
-        throw new Error(serverError);
-      }
-
-      // Sukces
-      setUsers((prev) => [...prev, responseData]);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error');
+      setUsers((prev) => [...prev, data]);
       setShowForm(false);
-      setFormData({
-        nick: '',
-        firstname: '',
-        surname: '',
-        age: '',
-        sex: '',
-        password: '',
-        department: '',
-      });
-      setErrorMessage('');
+      setImageFile(null);
+      
+
     } catch (err) {
-      console.error("Błąd:", err);
-      setErrorMessage(err.message || "Coś poszło nie tak – sprawdź konsolę");
+      setErrorMessage(err.message);
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
+
+  };
+
+  const getFilteredAndSortedUsers = () => {
+    return [...users]
+      // 🔍 FILTROWANIE
+      .filter((user) => {
+        const searchLower = search.toLowerCase();
+
+        const ageStr = user.age !== null && user.age !== undefined
+          ? String(user.age)
+          : '';
+
+        return (
+          (user.nick ?? '').toLowerCase().includes(searchLower) ||
+          (user.firstname ?? '').toLowerCase().includes(searchLower) ||
+          (user.surname ?? '').toLowerCase().includes(searchLower) ||
+          (user.department ?? '').toLowerCase().includes(searchLower) ||
+          ageStr.includes(searchLower) // 🔥 TU JEST FIX
+        );
+      })
+
+      // 📊 SORTOWANIE
+      .sort((a, b) => {
+        let valA = a[sortField];
+        let valB = b[sortField];
+
+        // 🔢 SORTOWANIE PO WIEKU (liczby)
+        if (sortField === 'age') {
+          valA = valA == null ? -Infinity : Number(valA);
+          valB = valB == null ? -Infinity : Number(valB);
+
+          return sortOrder === 'asc' ? valA - valB : valB - valA;
+        }
+
+        // 🔤 SORTOWANIE TEKSTOWE
+        valA = (valA ?? '').toString().toLowerCase();
+        valB = (valB ?? '').toString().toLowerCase();
+
+        if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+        if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+        return 0;
+      });
   };
 
   return (
     <div className="data-file-page">
       <h1 className = 'title'>Lista użytkowników</h1>
+      <div className="top-bar">
+        <div className="left-controls">
+          <input
+            className="input"
+            type="text"
+            placeholder="Szukaj po nicku lub nazwisku..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
 
-      <button 
-        className='primary-btn'
-        onClick={() => {
-          setShowForm(true);
-          setErrorMessage('');
-        }}
-        disabled={isSubmitting}
-      >
-        Dodaj nowy rekord
-      </button>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+      
+          <select
+            className="input" 
+            value={sortField}
+            onChange={(e) => setSortField(e.target.value)}
+          >
+            <option value="nick">Nick</option>
+            <option value="firstname">Imię</option>
+            <option value="surname">Nazwisko</option>
+            <option value="age">Wiek</option>
+            <option value="department">Dział</option>
+          </select>
 
+          <select
+            className="input" 
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+          >
+            <option value="asc">Rosnąco</option>
+            <option value="desc">Malejąco</option>
+          </select>
+
+        </div>
+        </div>
+          <button 
+            className='primary-btn'
+            onClick={() => {
+              setShowForm(true);
+              setErrorMessage('');
+            }}
+            disabled={isSubmitting}
+          >
+            Dodaj nowy rekord
+          </button>
+
+       </div>
       {showForm && (
         <div className='form-card'>
           <h3>Dodaj nowy wpis</h3>
@@ -223,6 +349,12 @@ const DataFilePage = () => {
               required
             />
 
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setImageFile(e.target.files[0])}
+            />
+
             <div className = 'form-actions'>
               <button
                 onClick={submitForm}
@@ -248,6 +380,7 @@ const DataFilePage = () => {
       <table className='users-table'>
         <thead>
           <tr>
+            <th>Avatar</th>
             <th>Nick</th>
             <th>Imie</th>
             <th>Nazwisko</th>
@@ -255,11 +388,21 @@ const DataFilePage = () => {
             <th>Płeć</th>
             <th>Dział</th>
             <th>Akcja</th>
+            <th>Usuń</th>
           </tr>
         </thead>
         <tbody>
-          {users.map((user) => (
+          {getFilteredAndSortedUsers().map((user) => (
             <tr key={user.nick}>
+              {console.log(`${API_BASE_URL}${user.image}`)}
+              <td>
+                <img
+                  src={user.image ? `${API_BASE_URL}/media/${user.image}` : '/default-avatar.png'}
+                  
+                  alt="avatar"
+                  className="avatar"
+                />
+              </td>
               <td >{user.nick}</td>
               <td >{user.firstname}</td>
               <td >{user.surname}</td>
