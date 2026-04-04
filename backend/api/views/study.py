@@ -248,3 +248,5 @@ def get_user_records(request, nick):
     ))
 
     return JsonResponse(data, safe=False)
+
+

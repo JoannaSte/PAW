@@ -1,0 +1,166 @@
+/* 🏰 TŁO OGÓLNE */
+.fight-container {
+  background: radial-gradient(circle at center, #2c1b10, #120a05);
+  border: 3px solid #8b5a2b;
+  border-radius: 15px;
+  padding: 30px;
+  color: #f5e6c8;
+  font-family: 'Cinzel', serif;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(0,0,0,0.8);
+}
+
+/* ⚔️ TYTUŁ */
+.fight-container h2 {
+  font-size: 28px;
+  margin-bottom: 20px;
+  text-shadow: 0 0 10px gold;
+}
+
+/* ⚔️ UKŁAD 3 KOLUMNY */
+.fight-layout {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 30px;
+}
+
+/* 🧝 KAŻDY ZAWODNIK */
+.fighter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 30%;
+}
+
+/* 🧝 AVATAR */
+.avatar_fight {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 3px solid #8b5a2b;
+  object-fit: cover;
+  box-shadow: 0 0 15px rgba(0,0,0,0.6);
+  transition: 0.3s;
+}
+
+/* 🏆 ZWYCIĘZCA */
+.avatar_fight.winner {
+  animation: winnerGlow 1s infinite alternate;
+  border-color: gold;
+}
+
+/* ⚔️ ŚRODEK */
+.fight-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+/* ⚔️ BUTTON */
+.fight-btn {
+  background: linear-gradient(145deg, #8b0000, #3d0000);
+  color: #fff;
+  border: 2px solid gold;
+  padding: 12px 25px;
+  font-size: 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.fight-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 15px red;
+}
+
+/* 🔥 BUTTON PODCZAS WALKI */
+.fight-btn.fighting {
+  animation: pulse 1s infinite;
+}
+
+/* 📅 SELECTY */
+select {
+  padding: 8px;
+  border-radius: 8px;
+  border: 2px solid #8b5a2b;
+  background: #1a0f08;
+  color: #f5e6c8;
+  width: 100%;
+}
+
+/* 🎯 WYBÓR KATEGORII */
+.category-select {
+  border-color: gold;
+  font-weight: bold;
+}
+
+/* 🏆 WYNIK */
+.fight-result {
+  margin-top: 25px;
+  font-size: 22px;
+  text-shadow: 0 0 10px gold;
+}
+
+/* ========================= */
+/* ✨ ANIMACJE */
+/* ========================= */
+
+/* ⚔️ pulsowanie buttona */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 10px #ffcc66;
+  }
+  50% {
+    transform: scale(1.15);
+    box-shadow: 0 0 30px #ff6600;
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 10px #ffcc66;
+  }
+}
+
+/* 🏆 glow zwycięzcy */
+@keyframes winnerGlow {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 15px gold;
+  }
+  100% {
+    transform: scale(1.15);
+    box-shadow: 0 0 40px yellow;
+  }
+}
+
+.fight-result {
+  margin-top: 25px;
+  font-size: 22px;
+  padding: 15px;
+  border-radius: 12px;
+  border: 2px solid #8b5a2b;
+  background: rgba(0,0,0,0.5);
+  text-shadow: 0 0 10px gold;
+  transition: 0.3s;
+}
+
+/* 🏆 WIN */
+.fight-result.win {
+  color: #ffd700;
+  box-shadow: 0 0 25px gold;
+  animation: resultPulse 1s infinite alternate;
+}
+
+/* 🤝 DRAW */
+.fight-result.draw {
+  color: #cccccc;
+  box-shadow: 0 0 15px #999;
+}
+
+@keyframes resultPulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.05); }
+}

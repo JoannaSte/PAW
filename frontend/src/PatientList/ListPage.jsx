@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import API_BASE_URL from "../utils/config";
 import { useNavigate } from 'react-router-dom';
 import './ListPage.css';
+import FightingMode from './FightingMode';
 
 const DataFilePage = () => {
+  const [showFightingMode, setShowFightingMode] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [sortField, setSortField] = useState('nick');
   const [sortOrder, setSortOrder] = useState('asc'); // asc / desc
@@ -36,6 +38,7 @@ const DataFilePage = () => {
       setErrorMessage("Nie udało się pobrać listy użytkowników");
     }
   };
+
 
   const removeUsers = async (nick) => {
     try {
@@ -80,65 +83,6 @@ const DataFilePage = () => {
     return '';
   };
   
-
-  // const submitForm = async () => {
-  //   const validationError = validateForm();
-  //   if (validationError) {
-  //     setErrorMessage(validationError);
-  //     return;
-  //   }
-
-  //   setIsSubmitting(true);
-  //   setErrorMessage('');
-
-  //   const payload = {
-  //     nick: formData.nick.trim(),
-  //     firstname: formData.firstname.trim(),
-  //     surname: formData.surname.trim(),
-  //     age: formData.age.trim() === '' ? null : Number(formData.age),
-  //     sex: formData.sex.trim(),
-  //     password: formData.password,
-  //     department: formData.department.trim(),
-  //   };
-
-  //   console.log("Wysyłane dane:", payload);
-
-  //   try {
-  //     const res = await fetch(`${API_BASE_URL}/api/add-study/`, {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify(payload),
-  //     });
-
-  //     const responseData = await res.json();
-
-  //     if (!res.ok) {
-  //       const serverError = responseData.error || responseData.detail || 'Błąd serwera';
-  //       throw new Error(serverError);
-  //     }
-
-  //     // Sukces
-  //     setUsers((prev) => [...prev, responseData]);
-  //     setShowForm(false);
-  //     setFormData({
-  //       nick: '',
-  //       firstname: '',
-  //       surname: '',
-  //       age: '',
-  //       sex: '',
-  //       password: '',
-  //       department: '',
-  //     });
-  //     setErrorMessage('');
-  //   } catch (err) {
-  //     console.error("Błąd:", err);
-  //     setErrorMessage(err.message || "Coś poszło nie tak – sprawdź konsolę");
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
   const submitForm = async () => {
     const validationError = validateForm();
     if (validationError) {
@@ -186,7 +130,6 @@ const DataFilePage = () => {
 
   const getFilteredAndSortedUsers = () => {
     return [...users]
-      // 🔍 FILTROWANIE
       .filter((user) => {
         const searchLower = search.toLowerCase();
 
@@ -203,7 +146,7 @@ const DataFilePage = () => {
         );
       })
 
-      // 📊 SORTOWANIE
+
       .sort((a, b) => {
         let valA = a[sortField];
         let valB = b[sortField];
@@ -273,6 +216,13 @@ const DataFilePage = () => {
             disabled={isSubmitting}
           >
             Dodaj nowy rekord
+          </button>
+
+          <button 
+            className='primary-btn'
+            onClick={() => setShowFightingMode(true)}
+          >
+            ⚔️ Fighting Mode
           </button>
 
        </div>
@@ -394,7 +344,6 @@ const DataFilePage = () => {
         <tbody>
           {getFilteredAndSortedUsers().map((user) => (
             <tr key={user.nick}>
-              {console.log(`${API_BASE_URL}${user.image}`)}
               <td>
                 <img
                   src={user.image ? `${API_BASE_URL}/media/${user.image}` : '/default-avatar.png'}
@@ -432,6 +381,24 @@ const DataFilePage = () => {
           ))}
         </tbody>
       </table>
+
+      {showFightingMode && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            
+            <button 
+              className="close-btn"
+              onClick={() => setShowFightingMode(false)}
+            >
+              ❌
+            </button>
+            <FightingMode 
+              users={users} 
+            />
+
+          </div>
+        </div>
+      )}
 
       {users.length === 0 && (
         <p>Brak rekordów</p>
