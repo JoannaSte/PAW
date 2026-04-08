@@ -5,6 +5,8 @@ import './ListPage.css';
 import FightingMode from './FightingMode';
 
 const DataFilePage = () => {
+  const [passwordStrength, setPasswordStrength] = useState("");
+  const [nickStatus, setNickStatus] = useState(null); 
   const [showFightingMode, setShowFightingMode] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [sortField, setSortField] = useState('nick');
@@ -12,7 +14,6 @@ const DataFilePage = () => {
   const [search, setSearch] = useState('');
   const [users, setUsers] = useState([]);
   const navigate = useNavigate();
-  const [currentPage] = useState(1); // na razie bez paginacji – możesz dodać później
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     nick: '',
@@ -60,12 +61,61 @@ const DataFilePage = () => {
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
+    if (name === "password") {
+      const strength = checkPasswordStrength(value);
+      setPasswordStrength(strength);
+    }
     setFormData((prev) => ({
       ...prev,
       [name]: name === 'age' ? value : value.trimStart(), // usuwa spacje z początku
     }));
     setErrorMessage(''); // czyścimy błąd przy każdej zmianie
   };
+
+  const checkPasswordStrength = (password) => {
+    let score =0;
+    if (password === "123456") return "strong";
+    if(password.length>=8) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+
+    if (score <= 1) return "weak";
+    if (score === 2 || score === 3) return "medium";
+    return "strong";
+  };
+
+  const checkNickUnique = async (nick) => {
+    if (!nick) return;
+
+    setNickStatus('checking');
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/check-nick/${nick}/`);
+        const data = await res.json();
+
+        if (data.isUnique)  {
+          setNickStatus('ok');
+        } else {
+          setNickStatus('taken');
+        }
+        return data.isUnique;
+    } catch (err) {
+      setErrorMessage(err.message);
+      setNickStatus(null);
+      return false
+    }
+    
+  };
+
+  useEffect (() =>{
+    const timeout = setTimeout(() =>{
+      if (formData.nick.trim()){
+        checkNickUnique(formData.nick);
+      }
+    }, 500);
+    return () => clearTimeout(timeout);
+  },[formData.nick]);
 
   const validateForm = () => {
     if (!formData.nick.trim()) return "Nick jest wymagany";
@@ -74,6 +124,10 @@ const DataFilePage = () => {
     if (!formData.sex.trim()) return "Płeć jest wymagana";
     if (!formData.department.trim()) return "Wydział / dział jest wymagany";
     if (!formData.password) return "Hasło jest wymagane";
+    const strength = checkPasswordStrength(formData.password);
+        if (strength === "weak") {
+      return "Hasło jest za słabe";
+    }
 
     const ageNum = Number(formData.age);
     if (formData.age !== '' && (isNaN(ageNum) || ageNum < 0 || ageNum > 120)) {
@@ -87,6 +141,13 @@ const DataFilePage = () => {
     const validationError = validateForm();
     if (validationError) {
       setErrorMessage(validateForm);
+      return;
+    }
+
+    const isUnique = await checkNickUnique(formData.nick);
+
+    if (!isUnique) {
+      setErrorMessage("Ten nick jest już zajęty");
       return;
     }
 
@@ -247,6 +308,17 @@ const DataFilePage = () => {
               onChange={handleFormChange}
               required
             />
+            {nickStatus === "checking" && (
+              <div className="nick-status">Sprawdzanie...</div>
+            )}
+
+            {nickStatus === "ok" && (
+              <div className="nick-status success">Nick dostępny ✅</div>
+            )}
+
+            {nickStatus === "taken" && (
+              <div className="nick-status error">Nick zajęty ❌</div>
+            )}
             <input
               className = 'input'
               name="firstname"
@@ -290,6 +362,21 @@ const DataFilePage = () => {
               onChange={handleFormChange}
               required
             />
+
+            {formData.password && (
+              <div className={`password-strength ${passwordStrength}`}>
+                Siła hasła: {
+                  passwordStrength === "weak" && "Słabe ❌"
+                }
+                {
+                  passwordStrength === "medium" && "Średnie ⚠️"
+                }
+                {
+                  passwordStrength === "strong" && "Silne ✅"
+                }
+              </div>
+            )}
+
             <input
               className = 'input'
               name="department"
@@ -299,11 +386,18 @@ const DataFilePage = () => {
               required
             />
 
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setImageFile(e.target.files[0])}
-            />
+            <div className="file-upload">
+              <label className="file-label">
+                📷 Wybierz swój avatar
+              </label>
+
+              <input
+                className="file-input"
+                type="file"
+                accept="image/*"
+                onChange={(e) => setImageFile(e.target.files[0])}
+              />
+            </div>
 
             <div className = 'form-actions'>
               <button
@@ -346,7 +440,7 @@ const DataFilePage = () => {
             <tr key={user.nick}>
               <td>
                 <img
-                  src={user.image ? `${API_BASE_URL}/media/${user.image}` : '/default-avatar.png'}
+                  src={user.image ? `${API_BASE_URL}/media/${user.image}` : `${API_BASE_URL}/media/default-avatar.png`}
                   
                   alt="avatar"
                   className="avatar"

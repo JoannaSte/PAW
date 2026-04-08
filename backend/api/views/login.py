@@ -28,3 +28,7 @@ def login_page(request):
         return JsonResponse({'error': 'Nieprawidłowe hasło'}, status=400)
 
     return JsonResponse({'success': True, 'nick': user.nick})
+
+def check_nick(request, nick):
+    exists = User.objects.filter(nick__iexact=nick).exists()
+    return JsonResponse({"isUnique": not exists})

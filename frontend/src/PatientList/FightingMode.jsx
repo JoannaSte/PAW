@@ -138,7 +138,7 @@ const FightingMode = ({ users }) => {
         src={
           getUser(userNick)?.image
             ? `${API_BASE_URL}/media/${getUser(userNick).image}`
-            : '/default-avatar.png'
+            : `${API_BASE_URL}/media/default-avatar.png`
         }
         className={`avatar_fight ${isWinner ? 'winner' : ''}`}
         alt="avatar"

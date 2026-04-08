@@ -27,13 +27,14 @@ from django.urls import path
 from django.conf.urls.static import static 
 from django.conf import settings  
 from api.views.study import get_studies, add_study, remove_study, upload_study, get_user_records
-from api.views.login import  login_page
+from api.views.login import  login_page, check_nick
 from api.views.statistics import correlation_view
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("api/studies/", get_studies, name="get_studies"),  # Endpoint to retrieve all studies
     path("api/add-study/", add_study, name="get_studies"), 
     path("api/login/", login_page, name="login_page"),
+    path("api/check-nick/<str:nick>/", check_nick, name="check_nick"),
     path("api/correlation/", correlation_view, name="correlation_view"),
     path("api/remove-study/<str:nick>/", remove_study, name="remove_study"),
     path("api/upload-study/<str:nick>/", upload_study, name="upload_study"),

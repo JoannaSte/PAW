@@ -128,7 +128,7 @@ select.input option {
 
 /* FORM CARD */
 .form-card {
-  margin-top: 20px;
+  margin: 20px auto; /* 🔥 to centruje */
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(15px);
   padding: 28px;
@@ -269,4 +269,68 @@ select.input option {
   top: 10px;
   right: 10px;
   cursor: pointer;
+}
+
+.nick-status {
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.nick-status.success {
+  color: lightgreen;
+}
+
+.nick-status.error {
+  color: #ff6b6b;
+}
+
+/* kontener */
+.file-upload {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* opis */
+.file-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+/* input file */
+.file-input {
+  background: rgba(255,255,255,0.2);
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  cursor: pointer;
+}
+
+/* hover */
+.file-input:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+.password-strength {
+  margin-top: 5px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* słabe */
+.password-strength.weak {
+  color: #ff4d4d;
+}
+
+/* średnie */
+.password-strength.medium {
+  color: #ffd166;
+}
+
+/* silne */
+.password-strength.strong {
+  color: #4caf50;
 }

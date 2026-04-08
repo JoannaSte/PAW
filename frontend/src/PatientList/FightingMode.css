@@ -23,6 +23,7 @@
   justify-content: space-between;
   align-items: center;
   gap: 30px;
+  cursor: url('/sword.png') 16 16, auto;
 }
 
 /* 🧝 KAŻDY ZAWODNIK */
@@ -164,3 +165,4 @@ select {
   0% { transform: scale(1); }
   100% { transform: scale(1.05); }
 }
+
