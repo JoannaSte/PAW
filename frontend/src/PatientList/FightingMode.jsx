@@ -76,54 +76,60 @@ const FightingMode = ({ users }) => {
         case "sleep_hours":
           value1 = r1.sleep_hours;
           value2 = r2.sleep_hours;
-          winnerNick = value1 > value2 ? user1 : user2;
+          //winnerNick = value1 > value2 ? user1 : user2;
           break;
 
         case "sleep_quality_score":
-          value1 = r1.sleep_quality_score;
-          value2 = r2.sleep_quality_score;
-          winnerNick = value1 > value2 ? user1 : user2;
+          // value1 = r1.sleep_quality_score;
+          // value2 = r2.sleep_quality_score;
+          value1 = Number(r1.sleep_quality_score);
+          value2 = Number(r2.sleep_quality_score);
+          //winnerNick = value1 > value2 ? user1 : user2;
           break;
 
         case "sleep_start_hour":
-          value1 = r1.sleep_start_hour;
-          value2 = r2.sleep_start_hour;
-          winnerNick = value1 < value2 ? user1 : user2;
+          value1 = Number(r1.sleep_start_hour);
+          value2 = Number(r2.sleep_start_hour);
+          //winnerNick = value1 < value2 ? user1 : user2;
           break;
 
         case "stress_level":
           const stressMap = { low: 1, medium: 2, high: 3 };
           value1 = stressMap[r1.stress_level] || 0;
           value2 = stressMap[r2.stress_level] || 0;
-          winnerNick = value1 < value2 ? user1 : user2;
+          //winnerNick = value1 < value2 ? user1 : user2;
           break;
 
         case "activity_level":
           const activityMap = { low: 1, medium: 2, high: 3 };
           value1 = activityMap[r1.activity_level] || 0;
           value2 = activityMap[r2.activity_level] || 0;
-          winnerNick = value1 > value2 ? user1 : user2;
+          //winnerNick = value1 > value2 ? user1 : user2;
           break;
 
         default:
           return;
       }
 
-      if (value1 === value2) {
+      if (value1 > value2) {
+        //setResult(`🏆 WYGRYWA: ${user1} (${value1} vs ${value2})`);
+        setResult(`🏆 WYGRYWA: ${user1}`);
+        setWinner(user1);
+        shootConfetti(avatar1Ref);
+
+      } else if (value2 > value1) {
+        //setResult(`🏆 WYGRYWA: ${user2} (${value2} vs ${value1})`);
+        setResult(`🏆 WYGRYWA: ${user2}`);
+        setWinner(user2);
+        shootConfetti(avatar2Ref);
+
+      } else {
         setResult("🤝 Remis");
         setWinner(null);
-      } else {
-        const winnerValue = winnerNick === user1 ? value1 : value2;
-
-        setResult(`🏆 WYGRYWA: ${winnerNick} (${category}: ${winnerValue})`);
-        setWinner(winnerNick);
-
-        if (winnerNick === user1) {
-          shootConfetti(avatar1Ref);
-        } else {
-          shootConfetti(avatar2Ref);
-        }
       }
+
+      setIsFighting(false);
+      console.log("VALUE1:", value1, "VALUE2:", value2);
 
       setIsFighting(false);
     }, 2000);

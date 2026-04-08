@@ -263,14 +263,17 @@ select.input option {
   max-width: 600px;
   position: relative;
 }
-
 .close-btn {
   position: absolute;
   top: 10px;
   right: 10px;
   cursor: pointer;
-}
 
+  font-size: 14px;   /* zmniejsza ikonę */
+  padding: 4px 8px;  /* zmniejsza obszar kliknięcia */
+  border: none;
+  background: transparent;
+}
 .nick-status {
   font-size: 0.85rem;
   margin-top: 4px;
