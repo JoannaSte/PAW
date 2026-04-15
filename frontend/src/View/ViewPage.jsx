@@ -267,7 +267,7 @@ import API_BASE_URL from "../utils/config";
 import './ViewPage.css';
 
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer
+  LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, BarChart, Bar
 } from "recharts";
 
 const ViewPage = () => {
@@ -462,10 +462,30 @@ const ViewPage = () => {
                 <div className="kpi-card">🏃 Aktywność: {avg("activity")}</div>
               </div>
 
-              {correlations && (
-                <div className="correlations">
+              {correlations && correlations.correlations && (
+                <div className="correlations chart-box" style={{ maxWidth: "800px", margin: "20px auto" }}>
                   <h3>Korelacje</h3>
-                  <pre>{JSON.stringify(correlations, null, 2)}</pre>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart
+                      data={Object.entries(correlations.correlations).map(([key, value]) => ({
+                        name: key,
+                        value: value,
+                      }))}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis 
+                        domain={([dataMin, dataMax]) => [
+                          Math.max(-1, dataMin - 0.05),
+                          Math.min(1, dataMax + 0.05)
+                        ]} 
+                        tickFormatter={(val) => val.toFixed(3)} 
+                      />
+                      <Tooltip formatter={(value) => value.toFixed(4)} />
+                      <Bar dataKey="value" fill="#8884d8" />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
               )}
             </>

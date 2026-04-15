@@ -33,7 +33,7 @@ const DataFilePage = () => {
       const data = await res.json();
       setUsers(data);
     } catch (err) {
-      
+
       console.error("Błąd pobierania:", err);
       setErrorMessage("Nie udało się pobrać listy użytkowników");
     }
@@ -82,7 +82,7 @@ const DataFilePage = () => {
 
     return '';
   };
-  
+
   const submitForm = async () => {
     const validationError = validateForm();
     if (validationError) {
@@ -118,7 +118,7 @@ const DataFilePage = () => {
       setUsers((prev) => [...prev, data]);
       setShowForm(false);
       setImageFile(null);
-      
+
 
     } catch (err) {
       setErrorMessage(err.message);
@@ -171,7 +171,7 @@ const DataFilePage = () => {
 
   return (
     <div className="data-file-page">
-      <h1 className = 'title'>Lista użytkowników</h1>
+      <h1 style={{ padding: '1em' }} className='title'>Lista użytkowników</h1>
       <div className="top-bar">
         <div className="left-controls">
           <input
@@ -183,55 +183,55 @@ const DataFilePage = () => {
           />
 
           <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-      
-          <select
-            className="input" 
-            value={sortField}
-            onChange={(e) => setSortField(e.target.value)}
-          >
-            <option value="nick">Nick</option>
-            <option value="firstname">Imię</option>
-            <option value="surname">Nazwisko</option>
-            <option value="age">Wiek</option>
-            <option value="department">Dział</option>
-          </select>
 
-          <select
-            className="input" 
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value)}
-          >
-            <option value="asc">Rosnąco</option>
-            <option value="desc">Malejąco</option>
-          </select>
+            <select
+              className="input"
+              value={sortField}
+              onChange={(e) => setSortField(e.target.value)}
+            >
+              <option value="nick">Nick</option>
+              <option value="firstname">Imię</option>
+              <option value="surname">Nazwisko</option>
+              <option value="age">Wiek</option>
+              <option value="department">Dział</option>
+            </select>
 
+            <select
+              className="input"
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+            >
+              <option value="asc">Rosnąco</option>
+              <option value="desc">Malejąco</option>
+            </select>
+
+          </div>
         </div>
-        </div>
-          <button 
-            className='primary-btn'
-            onClick={() => {
-              setShowForm(true);
-              setErrorMessage('');
-            }}
-            disabled={isSubmitting}
-          >
-            Dodaj nowy rekord
-          </button>
+        <button
+          className='primary-btn'
+          onClick={() => {
+            setShowForm(true);
+            setErrorMessage('');
+          }}
+          disabled={isSubmitting}
+        >
+          Dodaj nowy rekord
+        </button>
 
-          <button 
-            className='primary-btn'
-            onClick={() => setShowFightingMode(true)}
-          >
-            ⚔️ Fighting Mode
-          </button>
+        <button
+          className='primary-btn'
+          onClick={() => setShowFightingMode(true)}
+        >
+          ⚔️ Fighting Mode
+        </button>
 
-       </div>
+      </div>
       {showForm && (
         <div className='form-card'>
           <h3>Dodaj nowy wpis</h3>
 
           {errorMessage && (
-            <div 
+            <div
               className='error-box'
             >
               {errorMessage}
@@ -240,7 +240,7 @@ const DataFilePage = () => {
 
           <div className='form'>
             <input
-              className = 'input'
+              className='input'
               name="nick"
               placeholder="Nick *"
               value={formData.nick}
@@ -248,7 +248,7 @@ const DataFilePage = () => {
               required
             />
             <input
-              className = 'input'
+              className='input'
               name="firstname"
               placeholder="Imie *"
               value={formData.firstname}
@@ -256,7 +256,7 @@ const DataFilePage = () => {
               required
             />
             <input
-              className = 'input'
+              className='input'
               name="surname"
               placeholder="Nazwisko *"
               value={formData.surname}
@@ -264,7 +264,7 @@ const DataFilePage = () => {
               required
             />
             <input
-              className = 'input'
+              className='input'
               name="age"
               placeholder="Wiek"
               value={formData.age}
@@ -274,7 +274,7 @@ const DataFilePage = () => {
               max="120"
             />
             <input
-              className = 'input'
+              className='input'
               name="sex"
               placeholder="Płeć (np. M / K / inne) *"
               value={formData.sex}
@@ -282,7 +282,7 @@ const DataFilePage = () => {
               required
             />
             <input
-              className = 'input'
+              className='input'
               name="password"
               placeholder="Hasło *"
               type="password"
@@ -291,7 +291,7 @@ const DataFilePage = () => {
               required
             />
             <input
-              className = 'input'
+              className='input'
               name="department"
               placeholder="Wydział / Dział *"
               value={formData.department}
@@ -305,7 +305,7 @@ const DataFilePage = () => {
               onChange={(e) => setImageFile(e.target.files[0])}
             />
 
-            <div className = 'form-actions'>
+            <div className='form-actions'>
               <button
                 onClick={submitForm}
                 disabled={isSubmitting}
@@ -313,7 +313,7 @@ const DataFilePage = () => {
                 {isSubmitting ? 'Zapisywanie...' : 'Zapisz'}
               </button>
               <button
-                className = 'secondary-btn'
+                className='secondary-btn'
                 onClick={() => {
                   setShowForm(false);
                   setErrorMessage('');
@@ -347,7 +347,7 @@ const DataFilePage = () => {
               <td>
                 <img
                   src={user.image ? `${API_BASE_URL}/media/${user.image}` : '/default-avatar.png'}
-                  
+
                   alt="avatar"
                   className="avatar"
                 />
@@ -358,25 +358,25 @@ const DataFilePage = () => {
               <td >{user.age ?? '-'}</td>
               <td >{user.sex}</td>
               <td >{user.department}</td>
-            
-            <td>
-              <button
-              onClick={() => navigate(`/login`, {state: {nick:user.nick}})}
-              >
-                Log in
-              </button>
-            </td>
-            <td>
-              <button
-              onClick={() => {
-                if (window.confirm("Na pewno usunąć użytkownika?")) {
-                  removeUsers(user.nick);
-                }
-              }}
-              >
-                remove
-              </button>
-            </td>
+
+              <td>
+                <button
+                  onClick={() => navigate(`/login`, { state: { nick: user.nick } })}
+                >
+                  Log in
+                </button>
+              </td>
+              <td>
+                <button
+                  onClick={() => {
+                    if (window.confirm("Na pewno usunąć użytkownika?")) {
+                      removeUsers(user.nick);
+                    }
+                  }}
+                >
+                  remove
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -385,15 +385,15 @@ const DataFilePage = () => {
       {showFightingMode && (
         <div className="modal-overlay">
           <div className="modal-content">
-            
-            <button 
+
+            <button
               className="close-btn"
               onClick={() => setShowFightingMode(false)}
             >
               ❌
             </button>
-            <FightingMode 
-              users={users} 
+            <FightingMode
+              users={users}
             />
 
           </div>
