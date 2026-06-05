@@ -12,46 +12,22 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 import os
-from urllib.parse import urlparse
 import django
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-PROJECT_ROOT = BASE_DIR.parent
-
-
-def _load_dotenv(path: Path) -> None:
-    if not path.exists():
-        return
-    for line in path.read_text(encoding='utf-8').splitlines():
-        line = line.strip()
-        if line and not line.startswith('#') and '=' in line:
-            key, _, value = line.partition('=')
-            os.environ.setdefault(key.strip(), value.strip())
-
-
-_load_dotenv(PROJECT_ROOT / '.env')
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 400 * 1024 * 1024 # 100 MB
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
-    'SECRET_KEY',
-    'django-insecure--x7u9e&a7&6!dr5eu%qha3x(j-4--0r)y8yri2r=v*it0z+cx)',
-)
+SECRET_KEY = 'django-insecure--x7u9e&a7&6!dr5eu%qha3x(j-4--0r)y8yri2r=v*it0z+cx)'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+DEBUG = True
 
-ALLOWED_HOSTS = [
-    host.strip()
-    for host in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
-    if host.strip()
-]
-if os.environ.get('RENDER'):
-    ALLOWED_HOSTS.append('.onrender.com')
+ALLOWED_HOSTS = []
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -61,13 +37,6 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
-_extra_csrf_origins = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
-if _extra_csrf_origins:
-    CSRF_TRUSTED_ORIGINS.extend(
-        origin.strip()
-        for origin in _extra_csrf_origins.split(',')
-        if origin.strip()
-    )
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -134,34 +103,16 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 #     }
 # }
 
-def _database_from_uri(uri: str) -> dict:
-    parsed = urlparse(uri)
-    return {
+DATABASES = {
+    'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': parsed.path.lstrip('/'),
-        'USER': parsed.username,
-        'PASSWORD': parsed.password,
-        'HOST': parsed.hostname,
-        'PORT': parsed.port or '5432',
-        'OPTIONS': {'sslmode': 'require'},
+        'NAME': 'pawuser',
+        'USER': 'postgres',
+        'PASSWORD': 'Asia1234',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
-
-
-_neon_uri = os.environ.get('NEON_URI') or os.environ.get('DATABASE_URL')
-
-if _neon_uri:
-    DATABASES = {'default': _database_from_uri(_neon_uri)}
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'pawuser',
-            'USER': 'postgres',
-            'PASSWORD': 'Asia1234',
-            'HOST': 'localhost',
-            'PORT': '5432',
-        }
-    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
