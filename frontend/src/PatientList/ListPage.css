@@ -270,3 +270,148 @@ select.input option {
   right: 10px;
   cursor: pointer;
 }
+
+/* PAGINATION */
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 30px auto 0 auto;
+  padding: 16px 24px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 950px;
+  box-sizing: border-box;
+  color: white;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.pagination-limit, .pagination-jump {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.pagination-select {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: bold;
+}
+
+.pagination-jump-input {
+  width: 60px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.pagination-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pagination-btn {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination-pages {
+  display: flex;
+  gap: 6px;
+}
+
+.pagination-page-btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.pagination-page-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.pagination-page-btn.active {
+  background: linear-gradient(135deg, #ff7a18, #ff3d77);
+  border-color: transparent;
+  box-shadow: 0 4px 10px rgba(255, 61, 119, 0.4);
+}
+
+/* AVATAR DRAG DROP ZONE */
+.avatar-upload-zone {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px dashed rgba(255, 255, 255, 0.35);
+  padding: 16px;
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.23s ease-in-out;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.avatar-upload-zone.dragging {
+  border-color: #ff3d77;
+  background: rgba(255, 61, 119, 0.15);
+  box-shadow: 0 0 20px rgba(255, 61, 119, 0.35);
+  transform: scale(1.02);
+}
+
+.avatar-upload-zone.dragging * {
+  pointer-events: none;
+}
+
+.avatar-upload-zone:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #ffffff;
+}
+
+.avatar-preview-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar-upload-preview {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid white;
+}

@@ -66,8 +66,18 @@ def add_study(request):
         data = request.POST
         image = request.FILES.get('image')
 
+        nick = data.get('nick')
+        if nick:
+            nick = nick.strip()
+        
+        if not nick:
+            return JsonResponse({"error": "Nick jest wymagany"}, status=400)
+
+        if User.objects.filter(nick=nick).exists():
+            return JsonResponse({"error": "Użytkownik o takim nicku już istnieje"}, status=400)
+
         user = User(
-            nick=data.get('nick'),
+            nick=nick,
             firstname=data.get('firstname'),
             surname=data.get('surname'),
             age=data.get('age') or None,
@@ -90,7 +100,7 @@ def add_study(request):
             "age": user.age,
             "sex": user.sex,
             "department": user.department,
-            "image": user.image.url if user.image else None
+            "image": user.image.name if user.image else None
         })
 
 

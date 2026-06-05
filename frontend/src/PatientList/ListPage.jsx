@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import API_BASE_URL from "../utils/config";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import './ListPage.css';
 import FightingMode from './FightingMode';
 
 const DataFilePage = () => {
   const [showFightingMode, setShowFightingMode] = useState(false);
   const [imageFile, setImageFile] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [sortField, setSortField] = useState('nick');
   const [sortOrder, setSortOrder] = useState('asc'); // asc / desc
   const [search, setSearch] = useState('');
   const [users, setUsers] = useState([]);
   const navigate = useNavigate();
-  const [currentPage] = useState(1); // na razie bez paginacji – możesz dodać później
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const limit = parseInt(searchParams.get("limit") || "10", 10);
+  const [jumpPageInput, setJumpPageInput] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     nick: '',
@@ -67,6 +72,46 @@ const DataFilePage = () => {
     setErrorMessage(''); // czyścimy błąd przy każdej zmianie
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.type.startsWith('image/')) {
+        setImageFile(file);
+        setErrorMessage('');
+      } else {
+        setErrorMessage('Dozwolone są tylko pliki graficzne');
+      }
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith('image/')) {
+        setImageFile(file);
+        setErrorMessage('');
+      } else {
+        setErrorMessage('Dozwolone są tylko pliki graficzne');
+      }
+    }
+  };
+
   const validateForm = () => {
     if (!formData.nick.trim()) return "Nick jest wymagany";
     if (!formData.firstname.trim()) return "Imie jest wymagane";
@@ -115,10 +160,19 @@ const DataFilePage = () => {
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error');
-      setUsers((prev) => [...prev, data]);
+      
+      await fetchUsers();
       setShowForm(false);
       setImageFile(null);
-
+      setFormData({
+        nick: '',
+        firstname: '',
+        surname: '',
+        age: '',
+        sex: '',
+        password: '',
+        department: '',
+      });
 
     } catch (err) {
       setErrorMessage(err.message);
@@ -167,6 +221,50 @@ const DataFilePage = () => {
         if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
         return 0;
       });
+  };
+
+  const filteredAndSortedUsers = getFilteredAndSortedUsers();
+  const totalRecords = filteredAndSortedUsers.length;
+  const totalPages = Math.max(1, Math.ceil(totalRecords / limit));
+  const currentPage = Math.min(Math.max(1, page), totalPages);
+
+  useEffect(() => {
+    if (page < 1 || page > totalPages) {
+      setSearchParams(prev => {
+        prev.set("page", currentPage);
+        return prev;
+      }, { replace: true });
+    }
+  }, [page, currentPage, totalPages, setSearchParams]);
+
+  const paginatedUsers = filteredAndSortedUsers.slice(
+    (currentPage - 1) * limit,
+    currentPage * limit
+  );
+
+  const setPage = (newPage) => {
+    setSearchParams(prev => {
+      prev.set("page", newPage);
+      return prev;
+    });
+  };
+
+  const setLimit = (newLimit) => {
+    setSearchParams(prev => {
+      prev.set("limit", newLimit);
+      prev.set("page", 1);
+      return prev;
+    });
+  };
+
+  const handleJumpPage = () => {
+    const target = parseInt(jumpPageInput, 10);
+    if (!isNaN(target) && target >= 1 && target <= totalPages) {
+      setPage(target);
+      setJumpPageInput('');
+    } else {
+      alert(`Wprowadź poprawny numer strony od 1 do ${totalPages}`);
+    }
   };
 
   return (
@@ -299,11 +397,30 @@ const DataFilePage = () => {
               required
             />
 
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setImageFile(e.target.files[0])}
-            />
+            <div
+              className={`avatar-upload-zone ${isDragging ? 'dragging' : ''}`}
+              onDragOver={handleDragOver}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <label style={{ cursor: 'pointer', display: 'block', width: '100%' }}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  style={{ display: 'none' }}
+                />
+                {imageFile ? (
+                  <div className="avatar-preview-container">
+                    <img src={URL.createObjectURL(imageFile)} alt="Preview" className="avatar-upload-preview" />
+                    <span>{imageFile.name}</span>
+                  </div>
+                ) : (
+                  <div>🖼️ Przeciągnij i upuść avatar lub kliknij, aby wybrać</div>
+                )}
+              </label>
+            </div>
 
             <div className='form-actions'>
               <button
@@ -342,7 +459,7 @@ const DataFilePage = () => {
           </tr>
         </thead>
         <tbody>
-          {getFilteredAndSortedUsers().map((user) => (
+          {paginatedUsers.map((user) => (
             <tr key={user.nick}>
               <td>
                 <img
@@ -381,6 +498,73 @@ const DataFilePage = () => {
           ))}
         </tbody>
       </table>
+
+      {/* ✅ KONTROLKA STRONICOWANIA */}
+      <div className="pagination-container">
+        <div className="pagination-limit">
+          <span>Pozycji na stronę:</span>
+          <select
+            className="input pagination-select"
+            value={limit}
+            onChange={(e) => setLimit(Number(e.target.value))}
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+          </select>
+        </div>
+
+        <div className="pagination-nav">
+          <button
+            className="pagination-btn"
+            onClick={() => setPage(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            ◀ Poprzednia
+          </button>
+          
+          <div className="pagination-pages">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <button
+                key={p}
+                className={`pagination-page-btn ${currentPage === p ? 'active' : ''}`}
+                onClick={() => setPage(p)}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+
+          <button
+            className="pagination-btn"
+            onClick={() => setPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Następna ▶
+          </button>
+        </div>
+
+        <div className="pagination-jump">
+          <span>Skocz do strony:</span>
+          <input
+            type="number"
+            min="1"
+            max={totalPages}
+            className="input pagination-jump-input"
+            value={jumpPageInput}
+            onChange={(e) => setJumpPageInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleJumpPage();
+              }
+            }}
+          />
+          <button className="pagination-btn" onClick={handleJumpPage}>
+            Idź
+          </button>
+        </div>
+      </div>
 
       {showFightingMode && (
         <div className="modal-overlay">

@@ -8,10 +8,80 @@
 
 /* UPLOAD */
 .upload-card {
-  margin: 20px auto;
-  max-width: 400px;
+  margin: 30px auto;
+  max-width: 600px;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 24px;
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  text-align: center;
+  transition: all 0.23s ease-in-out;
+}
+
+.upload-card.dragging {
+  border-color: #facc15;
+  background: rgba(250, 204, 21, 0.12);
+  box-shadow: 0 0 25px rgba(250, 204, 21, 0.35);
+  transform: scale(1.015);
+}
+
+.upload-card.dragging * {
+  pointer-events: none;
+}
+
+.upload-card h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.upload-actions {
   display: flex;
-  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.custom-file-upload {
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px dashed rgba(255, 255, 255, 0.35);
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 500;
+  color: white;
+  transition: all 0.2s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  max-width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.custom-file-upload:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: #ffffff;
+}
+
+.btn-primary {
+  background: #facc15;
+  color: #1e293b;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.35);
 }
 
 /* KPI */
@@ -54,6 +124,12 @@ button {
   font-weight: bold;
 }
 
-button:hover {
+button:hover:not(:disabled) {
   transform: scale(1.05);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
