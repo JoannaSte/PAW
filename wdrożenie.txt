@@ -1,0 +1,23 @@
+================================================================================
+PLIK WDROŻENIOWY – HealthMonitoring
+================================================================================
+
+ADRES STRONY
+
+https://paw-navy.vercel.app/
+
+Jesli nie będzie widać innych użytkowników odrazu na wejściu na strony trzeba chwilke poczekać bo system sie 
+dopiero "wybudza" bo jest to darmowa wersja serwer i baza danych jest hostowana na innych stronach :c.
+
+
+PRZYKŁADOWE DANE DOSTĘPOWE
+
+--------------------------------------------------------------------------------
+Prosze wybrać konto o loginie:
+Login (nick):   Ewelina3
+Hasło:  1234
+
+Przykładowe dane do załadowania to pliki dane.json, dane2.json, dane_dodatkowe_01.json, 
+dane_dodatkowe_02.json, dane_dodatkowe_03.json, dane_dodatkowe_04.json,
+dane_dodatkowe_05.json, dane_dodatkowe_06.json.
+
