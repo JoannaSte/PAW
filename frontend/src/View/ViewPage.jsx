@@ -9,13 +9,15 @@ import {
 } from "recharts";
 
 // Mapowanie technicznych nazw par na czytelne polskie opisy
+// Klucze odpowiadają dokładnie temu, co zwraca backend (/api/correlation/)
 const CORRELATION_LABELS = {
-  "sleep_stress":    { label: "Sen ↔ Stres",      desc: "Czy więcej snu wiąże się z niższym stresem?" },
-  "sleep_quality":   { label: "Sen ↔ Jakość snu", desc: "Czy dłuższy sen oznacza lepszą jego jakość?" },
-  "sleep_activity":  { label: "Sen ↔ Aktywność",  desc: "Czy aktywność fizyczna wpływa na długość snu?" },
-  "stress_quality":  { label: "Stres ↔ Jakość snu",desc: "Czy wysoki stres pogarsza jakość snu?" },
-  "stress_activity": { label: "Stres ↔ Aktywność", desc: "Czy ćwiczenia redukują poziom stresu?" },
-  "quality_activity":{ label: "Jakość snu ↔ Aktywność", desc: "Czy aktywność fizyczna poprawia jakość snu?" },
+  "stress_sleep":    { label: "Stres ↔ Sen",              desc: "Czy wyższy stres wiąże się z krótszym snem?",        hint: "Wysoki stres często opóźnia zasypianie i skraca całkowity czas snu. Techniki relaksacyjne przed snem mogą znacząco poprawić sytuację." },
+  "stress_quality":  { label: "Stres ↔ Jakość snu",       desc: "Czy wysoki stres pogarsza jakość snu?",              hint: "Wyższy stres wyraźnie pogarsza jakość snu — to typowy wzorzec. Redukcja stresu powinna poprawić wypoczynek." },
+  "stress_activity": { label: "Stres ↔ Aktywność",        desc: "Czy ćwiczenia redukują poziom stresu?",              hint: "Regularna aktywność fizyczna to jeden z najskuteczniejszych sposobów redukcji stresu. Wysiłek sprzyja wydzielaniu endorfin i poprawia nastrój." },
+  "sleep_stress":    { label: "Sen ↔ Stres",              desc: "Czy więcej snu wiąże się z niższym stresem?" },
+  "sleep_quality":   { label: "Sen ↔ Jakość snu",         desc: "Czy dłuższy sen oznacza lepszą jego jakość?" },
+  "sleep_activity":  { label: "Sen ↔ Aktywność",          desc: "Czy aktywność fizyczna wpływa na długość snu?" },
+  "quality_activity":{ label: "Jakość snu ↔ Aktywność",   desc: "Czy aktywność fizyczna poprawia jakość snu?" },
 };
 
 // Interpretacja słowna wartości korelacji Pearsona
@@ -64,6 +66,21 @@ const CustomCorrelationTooltip = ({ active, payload }) => {
         <span style={{ color: "rgba(255,255,255,0.6)" }}>Wartość r = </span>
         <span style={{ color: interp.color, fontWeight: 700 }}>{value.toFixed(4)}</span>
       </div>
+      {meta.hint && (
+        <div style={{
+          background: `${interp.color}18`,
+          border: `1px solid ${interp.color}44`,
+          borderRadius: "8px",
+          padding: "8px 10px",
+          marginBottom: "8px",
+          color: "rgba(255,255,255,0.85)",
+          fontSize: "12px",
+          lineHeight: "1.5",
+          fontStyle: "italic",
+        }}>
+          💡 {meta.hint}
+        </div>
+      )}
       <div style={{ color: "rgba(255,255,255,0.55)", fontSize: "11px", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "8px" }}>
         📐 Skala: <strong style={{color:"#22c55e"}}>+1</strong> = idealna korelacja dodatnia &nbsp;|&nbsp;
         <strong style={{color:"#ef4444"}}>−1</strong> = idealna ujemna &nbsp;|&nbsp;
