@@ -31,6 +31,11 @@ const DataFilePage = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const fetchUsers = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/studies/`);
@@ -56,6 +61,39 @@ const DataFilePage = () => {
     } catch (err) {
       console.error("Błąd pobierania:", err);
       setErrorMessage("Nie udało się pobrać listy użytkowników");
+    }
+  };
+
+  const handleDeleteClick = (nick) => {
+    setDeleteTarget(nick);
+    setDeletePassword('');
+    setDeleteError('');
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deletePassword) {
+      setDeleteError('Wpisz hasło');
+      return;
+    }
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/login/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nick: deleteTarget, password: deletePassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setDeleteError(data.error || 'Nieprawidłowe hasło');
+        return;
+      }
+      await removeUsers(deleteTarget);
+      setDeleteTarget(null);
+      setDeletePassword('');
+    } catch (err) {
+      setDeleteError('Błąd połączenia z serwerem');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -185,19 +223,15 @@ const DataFilePage = () => {
   const getFilteredAndSortedUsers = () => {
     return [...users]
       .filter((user) => {
+        if (!search) return true;
         const searchLower = search.toLowerCase();
 
-        const ageStr = user.age !== null && user.age !== undefined
-          ? String(user.age)
-          : '';
+        if (sortField === 'age') {
+          const ageStr = user.age !== null && user.age !== undefined ? String(user.age) : '';
+          return ageStr.includes(searchLower);
+        }
 
-        return (
-          (user.nick ?? '').toLowerCase().includes(searchLower) ||
-          (user.firstname ?? '').toLowerCase().includes(searchLower) ||
-          (user.surname ?? '').toLowerCase().includes(searchLower) ||
-          (user.department ?? '').toLowerCase().includes(searchLower) ||
-          ageStr.includes(searchLower) // 🔥 TU JEST FIX
-        );
+        return (user[sortField] ?? '').toString().toLowerCase().includes(searchLower);
       })
 
 
@@ -294,14 +328,16 @@ const DataFilePage = () => {
               <option value="department">Dział</option>
             </select>
 
-            <select
-              className="input"
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value)}
-            >
-              <option value="asc">Rosnąco</option>
-              <option value="desc">Malejąco</option>
-            </select>
+            {sortField === 'age' && (
+              <select
+                className="input"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+              >
+                <option value="asc">Rosnąco</option>
+                <option value="desc">Malejąco</option>
+              </select>
+            )}
 
           </div>
         </div>
@@ -484,13 +520,7 @@ const DataFilePage = () => {
                 </button>
               </td>
               <td>
-                <button
-                  onClick={() => {
-                    if (window.confirm("Na pewno usunąć użytkownika?")) {
-                      removeUsers(user.nick);
-                    }
-                  }}
-                >
+                <button onClick={() => handleDeleteClick(user.nick)}>
                   remove
                 </button>
               </td>
@@ -586,6 +616,37 @@ const DataFilePage = () => {
 
       {users.length === 0 && (
         <p>Brak rekordów</p>
+      )}
+
+      {deleteTarget && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '400px' }}>
+            <h3>Usuń użytkownika „{deleteTarget}"</h3>
+            <p>Wpisz hasło użytkownika, aby potwierdzić usunięcie:</p>
+            {deleteError && <div className="error-box">{deleteError}</div>}
+            <input
+              className="input"
+              type="password"
+              placeholder="Hasło"
+              value={deletePassword}
+              onChange={(e) => { setDeletePassword(e.target.value); setDeleteError(''); }}
+              onKeyDown={(e) => e.key === 'Enter' && handleDeleteConfirm()}
+              autoFocus
+            />
+            <div className="form-actions" style={{ marginTop: '12px' }}>
+              <button onClick={handleDeleteConfirm} disabled={isDeleting}>
+                {isDeleting ? 'Usuwanie...' : 'Usuń'}
+              </button>
+              <button
+                className="secondary-btn"
+                onClick={() => setDeleteTarget(null)}
+                disabled={isDeleting}
+              >
+                Anuluj
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
