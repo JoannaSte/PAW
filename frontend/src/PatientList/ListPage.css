@@ -256,12 +256,28 @@ select.input option {
 }
 
 .modal-content {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
+  background: rgba(30, 20, 60, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 28px;
+  border-radius: 18px;
   min-width: 400px;
   max-width: 600px;
   position: relative;
+  color: white;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.modal-content h3 {
+  color: white;
+  margin-bottom: 10px;
+}
+
+.modal-content p {
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 0;
+  margin-bottom: 14px;
 }
 
 .close-btn {
