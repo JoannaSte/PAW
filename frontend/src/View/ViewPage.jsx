@@ -28,6 +28,12 @@ const CORRELATION_LABELS = {
     negative: "Im więcej ćwiczysz, tym krócej śpisz — może ćwiczysz późno wieczorem lub masz napiętą aktywność zawodową?",
     neutral:  "Aktywność fizyczna nie wpływa wyraźnie na długość snu — inne czynniki decydują o tym ile śpisz.",
   },
+  "stress_sleep": {
+    label: "Stres ↔ Sen",
+    positive: "Wyższy stres wiąże się z dłuższym snem — możliwe, że organizm kompensuje zmęczenie nerwowe nadmiernym snem.",
+    negative: "Wysoki stres często opóźnia zasypianie i skraca całkowity czas snu. Techniki relaksacyjne przed snem mogą znacząco poprawić sytuację.",
+    neutral:  "Stres nie wpływa wyraźnie na długość snu w tych danych — inne czynniki mogą być ważniejsze.",
+  },
   "stress_quality": {
     label: "Stres ↔ Jakość snu",
     positive: "Wyższy stres towarzyszy lepszej jakości snu — to nieoczekiwane; sprawdź czy dane są poprawne.",
