@@ -5,8 +5,73 @@ import { parseUserData, calculateStepsData, calculateAverage } from "../utils/da
 import './ViewPage.css';
 
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, BarChart, Bar
+  LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, BarChart, Bar, Cell
 } from "recharts";
+
+// Mapowanie technicznych nazw par na czytelne polskie opisy
+const CORRELATION_LABELS = {
+  "sleep_stress":    { label: "Sen ↔ Stres",      desc: "Czy więcej snu wiąże się z niższym stresem?" },
+  "sleep_quality":   { label: "Sen ↔ Jakość snu", desc: "Czy dłuższy sen oznacza lepszą jego jakość?" },
+  "sleep_activity":  { label: "Sen ↔ Aktywność",  desc: "Czy aktywność fizyczna wpływa na długość snu?" },
+  "stress_quality":  { label: "Stres ↔ Jakość snu",desc: "Czy wysoki stres pogarsza jakość snu?" },
+  "stress_activity": { label: "Stres ↔ Aktywność", desc: "Czy ćwiczenia redukują poziom stresu?" },
+  "quality_activity":{ label: "Jakość snu ↔ Aktywność", desc: "Czy aktywność fizyczna poprawia jakość snu?" },
+};
+
+// Interpretacja słowna wartości korelacji Pearsona
+const interpretCorrelation = (val) => {
+  const abs = Math.abs(val);
+  const dir = val >= 0 ? "dodatnia" : "ujemna";
+  if (abs >= 0.8) return { strength: "Bardzo silna", dir, color: val >= 0 ? "#22c55e" : "#ef4444", emoji: val >= 0 ? "💚" : "❤️" };
+  if (abs >= 0.6) return { strength: "Silna",        dir, color: val >= 0 ? "#4ade80" : "#f87171", emoji: val >= 0 ? "🟢" : "🔴" };
+  if (abs >= 0.4) return { strength: "Umiarkowana",  dir, color: val >= 0 ? "#facc15" : "#fb923c", emoji: val >= 0 ? "🟡" : "🟠" };
+  if (abs >= 0.2) return { strength: "Słaba",        dir, color: "#94a3b8", emoji: "⚪" };
+  return              { strength: "Brak / znikoma", dir, color: "#64748b", emoji: "➖" };
+};
+
+// Własny tooltip dla wykresu korelacji
+const CustomCorrelationTooltip = ({ active, payload }) => {
+  if (!active || !payload || !payload.length) return null;
+  const { name, value } = payload[0].payload;
+  const meta = CORRELATION_LABELS[name] || { label: name, desc: "" };
+  const interp = interpretCorrelation(value);
+
+  return (
+    <div style={{
+      background: "rgba(15, 10, 40, 0.95)",
+      border: `1px solid ${interp.color}`,
+      borderRadius: "14px",
+      padding: "14px 18px",
+      color: "white",
+      maxWidth: "280px",
+      boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 0 12px ${interp.color}44`,
+      fontSize: "13px",
+      lineHeight: "1.6",
+    }}>
+      <div style={{ fontWeight: 700, fontSize: "15px", marginBottom: "6px" }}>
+        {meta.label}
+      </div>
+      <div style={{ color: "rgba(255,255,255,0.7)", marginBottom: "10px", fontStyle: "italic" }}>
+        {meta.desc}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+        <span style={{ fontSize: "20px" }}>{interp.emoji}</span>
+        <span style={{ color: interp.color, fontWeight: 700, fontSize: "15px" }}>
+          {interp.strength} ({interp.dir})
+        </span>
+      </div>
+      <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: "8px", padding: "8px 10px", marginBottom: "8px" }}>
+        <span style={{ color: "rgba(255,255,255,0.6)" }}>Wartość r = </span>
+        <span style={{ color: interp.color, fontWeight: 700 }}>{value.toFixed(4)}</span>
+      </div>
+      <div style={{ color: "rgba(255,255,255,0.55)", fontSize: "11px", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "8px" }}>
+        📐 Skala: <strong style={{color:"#22c55e"}}>+1</strong> = idealna korelacja dodatnia &nbsp;|&nbsp;
+        <strong style={{color:"#ef4444"}}>−1</strong> = idealna ujemna &nbsp;|&nbsp;
+        <strong style={{color:"#94a3b8"}}>0</strong> = brak zależności
+      </div>
+    </div>
+  );
+};
 
 const ViewPage = () => {
   const { nick } = useParams();
@@ -252,31 +317,51 @@ const ViewPage = () => {
                 <div className="kpi-card">🏃 Aktywność: {avg("activity")}</div>
               </div>
 
-              {correlations && correlations.correlations && (
-                <div className="correlations chart-box" style={{ maxWidth: "800px", margin: "20px auto" }}>
-                  <h3>Korelacje</h3>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart
-                      layout="vertical"
-                      data={Object.entries(correlations.correlations).map(([key, value]) => ({
-                        name: key,
-                        value: value,
-                      }))}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis
-                        type="number"
-                        domain={[-1, 1]}
-                        tickFormatter={(val) => val.toFixed(3)}
-                      />
-                      <YAxis dataKey="name" type="category" />
-                      <Tooltip formatter={(value) => value.toFixed(4)} />
-                      <Bar dataKey="value" fill="#8884d8" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
+              {correlations && correlations.correlations && (() => {
+                const corrData = Object.entries(correlations.correlations).map(([key, value]) => ({
+                  name: key,
+                  label: CORRELATION_LABELS[key]?.label || key,
+                  value,
+                }));
+                return (
+                  <div className="correlations chart-box" style={{ maxWidth: "800px", margin: "20px auto" }}>
+                    <h3>📊 Korelacje między zmiennymi</h3>
+                    <p style={{ color: "rgba(255,255,255,0.65)", fontSize: "13px", marginBottom: "16px", marginTop: "-4px" }}>
+                      Najedź kursorem na słupek, aby zobaczyć szczegółową interpretację. Wartości bliskie <strong style={{color:"#22c55e"}}>+1</strong> oznaczają silną zależność dodatnią, bliskie <strong style={{color:"#ef4444"}}>−1</strong> — silną ujemną, a bliskie <strong style={{color:"#94a3b8"}}>0</strong> — brak zależności.
+                    </p>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart
+                        layout="vertical"
+                        data={corrData}
+                        margin={{ top: 10, right: 40, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                        <XAxis
+                          type="number"
+                          domain={[-1, 1]}
+                          tickFormatter={(val) => val.toFixed(1)}
+                          tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 12 }}
+                        />
+                        <YAxis
+                          dataKey="label"
+                          type="category"
+                          width={160}
+                          tick={{ fill: "rgba(255,255,255,0.85)", fontSize: 12 }}
+                        />
+                        <Tooltip content={<CustomCorrelationTooltip />} />
+                        <Bar dataKey="value" radius={[0, 6, 6, 0]}>
+                          {corrData.map((entry) => (
+                            <Cell
+                              key={entry.name}
+                              fill={interpretCorrelation(entry.value).color}
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                );
+              })()}
             </>
           )}
 
